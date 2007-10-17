@@ -1,8 +1,6 @@
-import web
-import daap, sys, os
+import web, daap, sys, os, struct
 from daap import do
 from processor import Processor
-import struct
 
 server_name = "test"
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
@@ -15,6 +13,7 @@ urls = (
     '/databases/([0-9]+)/items', 'item_list',
     '/databases/([0-9]+)/items/([0-9]+).mp3', 'item',
     '/databases/([0-9]+)/containers', 'container_list',
+    '/databases/([0-9]+)/containers/1/items', 'container_item_list',
     '/login', 'login',
     '/logout', 'logout',
     '/update', 'update',
@@ -29,7 +28,9 @@ class daap_handler:
         web.header('Accept-Ranges', 'bytes')
         web.header('Content-Language', 'en_us')
         if (type(data) == file):
-            web.header("Content-Length", str(os.stat(data.name).st_size))
+            try:
+                web.header("Content-Length", str(os.stat(data.name).st_size))
+            except: pass
             return data
         else:
             web.header("Content-Length", str(len(data)))
@@ -147,5 +148,6 @@ class container_list(daap_handler):
 p = Processor(music_path="music")
 p.refresh()
 p.build_list()
+p.build_playlists()
 
 if __name__ == "__main__": web.run(urls, globals())
