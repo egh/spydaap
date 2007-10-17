@@ -41,7 +41,6 @@ class Processor:
                 d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) for k in mp3.tags.keys() if self.mp3_string_map.has_key(k) ]
                 self.add_int_tags(mp3, d)
                 statinfo = os.stat(filename)
-                print mp3.info.length
                 d.extend([do('daap.songsize', os.path.getsize(filename)),
                           #do('daap.songdateadded', statinfo.st_ctime),
                           #do('daap.songdatemodified', statinfo.st_mtime),
