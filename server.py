@@ -2,6 +2,7 @@ import web
 import daap, sys, os
 from daap import do
 from processor import Processor
+import struct
 
 server_name = "test"
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
@@ -21,8 +22,12 @@ urls = (
 
 class daap_handler:
     def h(self,web,data):
-        web.header("Content-Type", "application/x-dmap-tagged")
-        web.header("DAAP-Server", "Simple")
+        web.header('Content-Type', 'application/x-dmap-tagged')
+        web.header('DAAP-Server', 'Simple')
+        web.header('Expires', '-1')
+        web.header('Cache-Control', 'no-cache')
+        web.header('Accept-Ranges', 'bytes')
+        web.header('Content-Language', 'en_us')
         if (type(data) == file):
             web.header("Content-Length", str(os.stat(data.name).st_size))
             return data
@@ -34,7 +39,7 @@ class login(daap_handler):
     def GET(self):
         mlog = do('dmap.loginresponse',
                   [ do('dmap.status', 200),
-                    do('dmap.sessionid', 1) ])
+                    do('dmap.sessionid', 101) ])
         return self.h(web,mlog.encode())
 
 class logout:
@@ -51,7 +56,7 @@ class server_info(daap_handler):
                     do('dmap.loginrequired', False),
                     do('dmap.timeoutinterval', 1800),
                     do('dmap.supportsautologout', True),
-                    do('dmap.supportsupdate', True),
+                    do('dmap.supportsupdate', False),
                     do('dmap.supportspersistentids', True),
                     do('dmap.supportsextensions', True),
                     do('dmap.supportsbrowse', True),
@@ -109,9 +114,18 @@ class update(daap_handler):
                     do('dmap.status', 200)])
         return self.h(web, mupd.encode())
 
-class item:
+class item(daap_handler):
     def GET(self,database,item):
-        return open('test.mp3')
+        fi = open(os.path.join('cache', 'cache_files'), 'r')
+        fi.seek(int(item) * 32)
+        cfn = fi.read(32)
+        fi.close()
+        cfi = open(os.path.join('cache', 'items', cfn))
+        fn_len = struct.unpack('!i', cfi.read(4))[0]
+        fn = cfi.read(fn_len)
+        cfi.close()
+        sys.stderr.write(fn)
+        return self.h(web, open (fn))
 
 class container_list(daap_handler):
     def GET(self,database):
@@ -134,4 +148,5 @@ class container_list(daap_handler):
 p = Processor(music_path="/home/egh/music")
 p.refresh()
 p.build_list()
+
 if __name__ == "__main__": web.run(urls, globals())

@@ -13,23 +13,54 @@ class Processor:
         else: self.cache_dir = 'cache'
         self.items_cache_dir = os.path.join(self.cache_dir, 'items')
 
-    mp3_map = {
+    mp3_string_map = {
         'TIT2': 'dmap.itemname',
         'TPE1': 'daap.songartist',
-        'TALB': 'daap.songalbum',
+        'TALB': 'daap.songalbum'
         }
-    
-    def mp3(self, filename):
-        try:
-            mp3 = MP3(filename)
-                    # do('dmap.listing'
-#                        [ do('dmap.listingitem', 
-                    #])
 
-            d = [ do(self.mp3_map[k], str(mp3.tags[k])) for k in mp3.tags.keys() if self.mp3_map.has_key(k)]
-            return d
-        except Exception:
-            return None
+    mp3_int_map = {
+        'TDOR': 'daap.songyear',
+        'TBPM': 'daap.songbeatsperminute'
+        }
+#do('daap.songdiscnumber', 1),
+#        do('daap.songgenre', 'Test'),
+#        do('daap.songdisccount', 1),
+#        do('daap.songcompilation', False),
+#        do('daap.songuserrating', 1),
+                                                     
+    def add_int_tags(self, mp3, d):
+        for k in mp3.tags.keys():
+            if self.mp3_int_map.has_key(k):
+                try: d.append(do(mp3_int_map[k], int(str(mp3.tags[k]))))
+                except: pass
+    def mp3(self, filename):
+#        try:
+            mp3 = MP3(filename)
+            if mp3.tags != None:
+                d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) for k in mp3.tags.keys() if self.mp3_string_map.has_key(k) ]
+                self.add_int_tags(mp3, d)
+                statinfo = os.stat(filename)
+                print mp3.info.length
+                d.extend([do('daap.songsize', os.path.getsize(filename)),
+                          #do('daap.songdateadded', statinfo.st_ctime),
+                          #do('daap.songdatemodified', statinfo.st_mtime),
+                          do('daap.songtime', mp3.info.length),
+                          do('daap.songbitrate', mp3.info.bitrate),
+                          do('daap.songsamplerate', mp3.info.sample_rate)])
+                try:
+                    if mp3.tags.has_key('TRCK'):
+                        t = str(mp3.tags['TRCK']).split('/')
+                        d.append(do('daap.songtracknumber', int(t[0])))
+                        if (len(t) == 2):
+                            d.append(do('daap.songtrackcount', int(t[1])))                     
+                except:
+                    pass
+                return d
+            else:
+                return None
+ #       except Exception:
+  #          return None
             
     def refresh(self):
         from traceback import print_exc
@@ -64,26 +95,11 @@ class Processor:
                       [ do('dmap.itemkind', 2),
                         do('dmap.containeritemid', 2),
                         do('dmap.itemid', i),
-                        do('daap.songgenre', 'Test'),
                         do('daap.songformat', 'mp3'),
-                        do('daap.songsize', 100000),
-                        do('daap.songtime', 10000),
-                        do('daap.songtrackcount', 10),
-                        do('daap.songtracknumber', 1),
-                        do('daap.songyear', 2007),
-                        do('daap.songbitrate', 128),
-                        do('daap.songdiscnumber', 1),
-                        do('daap.songdisccount', 1),
-                        do('daap.songbeatsperminute', 0),
-                        do('daap.songcompilation', False),
-                        do('daap.songdateadded', 0),
-                        do('daap.songdatemodified', 0),
                         do('daap.songdescription', 'MPEG Audio File'),
-                        do('daap.songuserrating', 1),
-                        do('daap.songsamplerate', 44100),                        
                         fi.read()
                         ])
-        children = [ f (i + 1, fn) for i, fn in enumerate(files) ]
+        children = [ f (i, fn) for i, fn in enumerate(files) ]
         file_count = len(files)
         d = do('daap.databasesongs',
                [ do('dmap.status', 200),
@@ -94,4 +110,8 @@ class Processor:
                     children) ])
         fi = open(os.path.join(self.cache_dir, 'item_list'), 'w')        
         fi.write(d.encode())
+        fi.close()
+        fi = open(os.path.join(self.cache_dir, 'cache_files'), 'w')
+        for n in files:
+            fi.write(n)
         fi.close()
