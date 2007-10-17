@@ -124,7 +124,6 @@ class item(daap_handler):
         fn_len = struct.unpack('!i', cfi.read(4))[0]
         fn = cfi.read(fn_len)
         cfi.close()
-        sys.stderr.write(fn)
         return self.h(web, open (fn))
 
 class container_list(daap_handler):
@@ -145,7 +144,7 @@ class container_list(daap_handler):
                  ])
         self.h(web, d.encode())
 
-p = Processor(music_path="/home/egh/music")
+p = Processor(music_path="music")
 p.refresh()
 p.build_list()
 
