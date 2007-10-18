@@ -98,14 +98,18 @@ class Processor:
         self.metadata_cache = MetadataCache(os.path.join(self.cache_dir, 'items'))
 
     mp3_string_map = {
+        'TIT1': 'daap.songgrouping',
         'TIT2': 'dmap.itemname',
         'TPE1': 'daap.songartist',
-        'TALB': 'daap.songalbum'
+        'TCOM': 'daap.songcomposer',
+        'TCON': 'daap.songgenre',
+        'TPE1': 'daap.songartist',
+        'TALB': 'daap.songalbum',
         }
 
     mp3_int_map = {
         'TDOR': 'daap.songyear',
-        'TBPM': 'daap.songbeatsperminute'
+        'TBPM': 'daap.songbeatsperminute',
         }
 #do('daap.songdiscnumber', 1),
 #        do('daap.songgenre', 'Test'),
@@ -127,11 +131,12 @@ class Processor:
                 self.add_int_tags(mp3, d)
                 statinfo = os.stat(filename)
                 d.extend([do('daap.songsize', os.path.getsize(filename)),
-                          #do('daap.songdateadded', statinfo.st_ctime),
-                          #do('daap.songdatemodified', statinfo.st_mtime),
+                          do('daap.songdateadded', statinfo.st_ctime),
+                          do('daap.songdatemodified', statinfo.st_mtime),
                           do('daap.songtime', mp3.info.length),
                           do('daap.songbitrate', mp3.info.bitrate),
-                          do('daap.songsamplerate', mp3.info.sample_rate)])
+                          do('daap.songsamplerate', mp3.info.sample_rate)
+                          ])
                 try:
                     if mp3.tags.has_key('TRCK'):
                         t = str(mp3.tags['TRCK']).split('/')
@@ -140,7 +145,10 @@ class Processor:
                             d.append(do('daap.songtrackcount', int(t[1])))                     
                 except:
                     pass
-                return (d, str(mp3.tags['TIT2']))
+                if mp3.tags.has_key('TIT2'):
+                    name = str(mp3.tags['TIT2'])
+                else: name = filename
+                return (d, name)
             else:
                 return (None, None)
         except Exception, e:
@@ -155,7 +163,7 @@ class Processor:
                 ffn = os.path.join(path, fn)
                 digest = md5.md5(ffn)
                 md = self.metadata_cache.get_item(digest.hexdigest())
-                if (not(md.get_exists()) or (md.get_mttime() < os.stat(ffn).st_mtime)):
+                if (not(md.get_exists()) or (md.get_mtime() < os.stat(ffn).st_mtime)):
                     (m, name) = self.mp3(ffn)
                     if m != None:
                         self.metadata_cache.write_entry(name, ffn, m)
