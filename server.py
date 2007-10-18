@@ -138,8 +138,8 @@ class ContentRangeFile:
                 raise StopIteration
             if (to_read + self.read > self.end):
                 to_read = self.end - self.read
-                retval = self.parent.read(to_read)
-                self.read = self.read + len(retval)
+            retval = self.parent.read(to_read)
+            self.read = self.read + len(retval)
         else: retval = self.parent.read(to_read)
         if retval == '':
             self.parent.close()
@@ -151,6 +151,7 @@ class ContentRangeFile:
 
 class item(daap_handler):
     def GET(self,database,item,format):
+        #web.request.chunked_write = True
         fi = open(os.path.join('cache', 'cache_files'), 'r')
         fi.seek(int(item) * 32)
         cfn = fi.read(32)

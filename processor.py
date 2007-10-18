@@ -110,6 +110,7 @@ class Processor:
     mp3_int_map = {
         'TDOR': 'daap.songyear',
         'TBPM': 'daap.songbeatsperminute',
+        #'TLEN': 'daap.songtime',
         }
 #do('daap.songdiscnumber', 1),
 #        do('daap.songgenre', 'Test'),
@@ -133,7 +134,7 @@ class Processor:
                 d.extend([do('daap.songsize', os.path.getsize(filename)),
                           do('daap.songdateadded', statinfo.st_ctime),
                           do('daap.songdatemodified', statinfo.st_mtime),
-                          do('daap.songtime', mp3.info.length),
+                          do('daap.songtime', mp3.info.length * 1000),
                           do('daap.songbitrate', mp3.info.bitrate),
                           do('daap.songsamplerate', mp3.info.sample_rate)
                           ])
