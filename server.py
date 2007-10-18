@@ -11,7 +11,7 @@ urls = (
     '/content-codes', 'content_codes',
     '/databases', 'database_list',
     '/databases/([0-9]+)/items', 'item_list',
-    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 'item',
+    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)\?(.*)', 'item',
     '/databases/([0-9]+)/containers', 'container_list',
     itunes_re + '/databases/([0-9]+)/containers/([0-9]+)/items', 'container_item_list',
     '/login', 'login',
@@ -27,7 +27,7 @@ class daap_handler:
         web.header('Cache-Control', 'no-cache')
         web.header('Accept-Ranges', 'bytes')
         web.header('Content-Language', 'en_us')
-        if (hasattr(data, '__next__')):
+        if (hasattr(data, 'next')):
             try:
                 web.header("Content-Length", str(os.stat(data.name).st_size))
             except: pass
@@ -59,15 +59,15 @@ class server_info(daap_handler):
                     do('dmap.itemname', server_name),
                     do('dmap.loginrequired', False),
                     do('dmap.authenticationmethod', 0),
-                    do('dmap.supportsextensions', False),
-                    do('dmap.supportsindex', False),
-                    do('dmap.supportsbrowse', False),
-                    do('dmap.supportsquery', False),
-                    do('dmap.supportspersistentids', False),
+                    #do('dmap.supportsextensions', True),
+                    #do('dmap.supportsindex', True),
+                    #do('dmap.supportsbrowse', True),
+                    #do('dmap.supportsquery', True),
+                    do('dmap.supportspersistentids', True),
                     do('dmap.databasescount', 1),                
-                    do('dmap.supportsautologout', True),
-                    do('dmap.supportsupdate', False),
-                    do('dmap.supportsresolve', True),
+                    #do('dmap.supportsautologout', True),
+                    #do('dmap.supportsupdate', True),
+                    #do('dmap.supportsresolve', True),
                    ])
         return self.h(web,msrv.encode())
 
@@ -149,7 +149,7 @@ class ContentRangeFile:
         return self
 
 class item(daap_handler):
-    def GET(self,database,item,format):
+    def GET(self,database,item,format,q):
         fi = open(os.path.join('cache', 'cache_files'), 'r')
         fi.seek(int(item) * 32)
         cfn = fi.read(32)
