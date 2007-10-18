@@ -31,11 +31,12 @@ class daap_handler:
             try:
                 web.header("Content-Length", str(os.stat(data.name).st_size))
             except: pass
+            return data
         else:
             try:
                 web.header("Content-Length", str(len(data)))
             except: pass
-        return data
+            print data
 
 class login(daap_handler):
     def GET(self):
