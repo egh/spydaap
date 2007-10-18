@@ -11,7 +11,7 @@ urls = (
     '/content-codes', 'content_codes',
     '/databases', 'database_list',
     '/databases/([0-9]+)/items', 'item_list',
-    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)\?(.*)', 'item',
+    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 'item',
     '/databases/([0-9]+)/containers', 'container_list',
     itunes_re + '/databases/([0-9]+)/containers/([0-9]+)/items', 'container_item_list',
     '/login', 'login',
@@ -149,7 +149,7 @@ class ContentRangeFile:
         return self
 
 class item(daap_handler):
-    def GET(self,database,item,format,q):
+    def GET(self,database,item,format):
         fi = open(os.path.join('cache', 'cache_files'), 'r')
         fi.seek(int(item) * 32)
         cfn = fi.read(32)
@@ -163,8 +163,14 @@ class item(daap_handler):
             m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
             (start, end) = m.groups()
             if end != None: end = int(end)
+            else: end = os.stat(fn).st_size
             start = int(start)
             f = ContentRangeFile(open(fn), start, end)
+            web.ctx.status = "206 Partial Content"
+            web.header("Content-Range", 
+                       "bytes " + str(start) + "-"
+                       + str(end) + "/"
+                       + str(os.stat(fn).st_size))
         else: f = open(fn)
         return self.h(web, f)
 
