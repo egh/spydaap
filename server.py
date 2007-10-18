@@ -36,13 +36,14 @@ class daap_handler:
             try:
                 web.header("Content-Length", str(len(data)))
             except: pass
-            print data
+            sys.stdout.write(data)
 
+session_id = 1
 class login(daap_handler):
     def GET(self):
         mlog = do('dmap.loginresponse',
                   [ do('dmap.status', 200),
-                    do('dmap.sessionid', 101) ])
+                    do('dmap.sessionid', session_id) ])
         return self.h(web,mlog.encode())
 
 class logout:
@@ -57,17 +58,17 @@ class server_info(daap_handler):
                     do('daap.protocolversion', '3.0'),
                     do('dmap.timeoutinterval', 1800),
                     do('dmap.itemname', server_name),
-                    do('dmap.loginrequired', False),
+                    #do('dmap.loginrequired', False),
                     do('dmap.authenticationmethod', 0),
-                    #do('dmap.supportsextensions', True),
-                    #do('dmap.supportsindex', True),
-                    #do('dmap.supportsbrowse', True),
-                    #do('dmap.supportsquery', True),
-                    do('dmap.supportspersistentids', True),
+                    do('dmap.supportsextensions', 0),
+                    do('dmap.supportsindex', 0),
+                    do('dmap.supportsbrowse', 0),
+                    do('dmap.supportsquery', 0),
+                    do('dmap.supportspersistentids', 0),
                     do('dmap.databasescount', 1),                
-                    #do('dmap.supportsautologout', True),
-                    #do('dmap.supportsupdate', True),
-                    #do('dmap.supportsresolve', True),
+                    #do('dmap.supportsautologout', 0),
+                    #do('dmap.supportsupdate', 0),
+                    #do('dmap.supportsresolve', 0),
                    ])
         return self.h(web,msrv.encode())
 
