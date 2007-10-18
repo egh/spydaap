@@ -1,4 +1,4 @@
-import web, daap, sys, os, struct
+import web, daap, sys, os, struct, re
 from daap import do
 from processor import Processor
 
@@ -11,9 +11,9 @@ urls = (
     '/content-codes', 'content_codes',
     '/databases', 'database_list',
     '/databases/([0-9]+)/items', 'item_list',
-    '/databases/([0-9]+)/items/([0-9]+).mp3', 'item',
+    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 'item',
     '/databases/([0-9]+)/containers', 'container_list',
-    '/databases/([0-9]+)/containers/1/items', 'container_item_list',
+    itunes_re + '/databases/([0-9]+)/containers/([0-9]+)/items', 'container_item_list',
     '/login', 'login',
     '/logout', 'logout',
     '/update', 'update',
@@ -27,14 +27,15 @@ class daap_handler:
         web.header('Cache-Control', 'no-cache')
         web.header('Accept-Ranges', 'bytes')
         web.header('Content-Language', 'en_us')
-        if (type(data) == file):
+        if (hasattr(data, '__next__')):
             try:
                 web.header("Content-Length", str(os.stat(data.name).st_size))
             except: pass
-            return data
         else:
-            web.header("Content-Length", str(len(data)))
-            print data
+            try:
+                web.header("Content-Length", str(len(data)))
+            except: pass
+        return data
 
 class login(daap_handler):
     def GET(self):
@@ -53,18 +54,19 @@ class server_info(daap_handler):
                   [ do('dmap.status', 200),
                     do('dmap.protocolversion', '2.0'),
                     do('daap.protocolversion', '3.0'),
+                    do('dmap.timeoutinterval', 1800),
                     do('dmap.itemname', server_name),
                     do('dmap.loginrequired', False),
-                    do('dmap.timeoutinterval', 1800),
+                    do('dmap.authenticationmethod', 0),
+                    do('dmap.supportsextensions', False),
+                    do('dmap.supportsindex', False),
+                    do('dmap.supportsbrowse', False),
+                    do('dmap.supportsquery', False),
+                    do('dmap.supportspersistentids', False),
+                    do('dmap.databasescount', 1),                
                     do('dmap.supportsautologout', True),
                     do('dmap.supportsupdate', False),
-                    do('dmap.supportspersistentids', True),
-                    do('dmap.supportsextensions', True),
-                    do('dmap.supportsbrowse', True),
-                    do('dmap.supportsquery', True),
-                    do('dmap.supportsindex', True),
                     do('dmap.supportsresolve', True),
-                    do('dmap.databasescount', 1),
                    ])
         return self.h(web,msrv.encode())
 
@@ -111,12 +113,42 @@ server_revision = 1
 class update(daap_handler):
     def GET(self):
         mupd = do('dmap.updateresponse',
-                  [ do('dmap.serverrevision', server_revision),
-                    do('dmap.status', 200)])
+                  [ do('dmap.status', 200),
+                    do('dmap.serverrevision', server_revision),
+                    ])
         return self.h(web, mupd.encode())
 
+class ContentRangeFile:
+    def __init__(self, parent, start, end=None, chunk=1024):
+        self.parent = parent
+        self.start = start
+        self.end = end
+        self.chunk = chunk
+        self.parent.seek(self.start)
+        self.read = start
+
+    def next(self):
+        to_read = self.chunk
+        if (self.end != None):
+            if (self.read >= self.end):
+                sys.stderr.write('done')
+                self.parent.close()
+                raise StopIteration
+            if (to_read + self.read > self.end):
+                to_read = self.end - self.read
+                retval = self.parent.read(to_read)
+                self.read = self.read + len(retval)
+        else: retval = self.parent.read(to_read)
+        if retval == '':
+            self.parent.close()
+            raise StopIteration
+        else: return retval
+
+    def __iter__(self):
+        return self
+
 class item(daap_handler):
-    def GET(self,database,item):
+    def GET(self,database,item,format):
         fi = open(os.path.join('cache', 'cache_files'), 'r')
         fi.seek(int(item) * 32)
         cfn = fi.read(32)
@@ -125,7 +157,15 @@ class item(daap_handler):
         fn_len = struct.unpack('!i', cfi.read(4))[0]
         fn = cfi.read(fn_len)
         cfi.close()
-        return self.h(web, open (fn))
+        if (web.ctx.environ.has_key('HTTP_RANGE')):
+            rs = web.ctx.environ['HTTP_RANGE']
+            m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
+            (start, end) = m.groups()
+            if end != None: end = int(end)
+            start = int(start)
+            f = ContentRangeFile(open(fn), start, end)
+        else: f = open(fn)
+        return self.h(web, f)
 
 class container_list(daap_handler):
     def GET(self,database):
@@ -144,6 +184,10 @@ class container_list(daap_handler):
                       ])
                  ])
         self.h(web, d.encode())
+
+class container_item_list(daap_handler):
+    def GET(self, database, container):
+        return self.h(web, open('cache/playlist_1'))
 
 p = Processor(music_path="music")
 p.refresh()
