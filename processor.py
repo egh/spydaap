@@ -1,9 +1,9 @@
-from mutagen.id3 import ID3NoHeaderError, ID3UnsupportedVersionError, ID3
-import os, sys, types, struct, md5, StringIO
+import mutagen.id3
 from mutagen.mp3 import MP3
+import os, sys, types, struct, md5, StringIO
 from daap import do
 import playlists
-ID3.PEDANTIC = False
+mutagen.id3.ID3.PEDANTIC = False
 
 class MetadataCache:
     class Iter:
@@ -32,10 +32,10 @@ class MetadataCache:
     def get_item(self, id):
         return MetadataCacheItem(self.dir, id, None)
 
-    def write_entry(self, fn, name, daap):
+    def write_entry(self, name, fn, daap):
         data = "".join([ d.encode() for d in daap])
-        data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
         data = struct.pack('!i%ss' % len(name), len(name), name) + data
+        data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
         cachefn = os.path.join(self.dir, md5.md5(fn).hexdigest())
         f = open(cachefn, 'w')
         f.write(data)
@@ -141,30 +141,32 @@ class Processor:
         try:
             mp3 = MP3(filename)
             if mp3.tags != None:
-                d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) for k in mp3.tags.keys() if self.mp3_string_map.has_key(k) ]
+                d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) 
+                      for k in mp3.tags.keys() 
+                      if self.mp3_string_map.has_key(k) ]
                 self.add_int_tags(mp3, d)
-                statinfo = os.stat(filename)
-                d.extend([do('daap.songsize', os.path.getsize(filename)),
-                          do('daap.songdateadded', statinfo.st_ctime),
-                          do('daap.songdatemodified', statinfo.st_mtime),
-                          do('daap.songtime', mp3.info.length * 1000),
-                          do('daap.songbitrate', mp3.info.bitrate),
-                          do('daap.songsamplerate', mp3.info.sample_rate)
-                          ])
                 try:
                     if mp3.tags.has_key('TRCK'):
                         t = str(mp3.tags['TRCK']).split('/')
                         d.append(do('daap.songtracknumber', int(t[0])))
                         if (len(t) == 2):
-                            d.append(do('daap.songtrackcount', int(t[1])))                     
-                except:
-                    pass
+                            d.append(do('daap.songtrackcount', int(t[1])))
+                except: pass
                 if mp3.tags.has_key('TIT2'):
                     name = str(mp3.tags['TIT2'])
                 else: name = filename
-                return (d, name)
-            else:
-                return (None, None)
+            else: 
+                d = []
+                name = filename
+            statinfo = os.stat(filename)
+            d.extend([do('daap.songsize', os.path.getsize(filename)),
+                      do('daap.songdateadded', statinfo.st_mtime),
+                      do('daap.songdatemodified', statinfo.st_mtime),
+                      do('daap.songtime', mp3.info.length * 1000),
+                      do('daap.songbitrate', mp3.info.bitrate / 1000),
+                      do('daap.songsamplerate', mp3.info.sample_rate)
+                      ])
+            return (d, name)
         except Exception, e:
             sys.stderr.write("Caught exception: while processing %s: %s " % (filename, str(e)) )
             return (None, None)
@@ -221,7 +223,6 @@ class Processor:
         for x in dir(playlists):
             pclass = eval('playlists.' + x)
             if type(pclass) == types.ClassType and issubclass(pclass, playlists.Playlist) and pclass != playlists.Playlist:
-                print "Building playlist: " + pclass.name
                 playlist = pclass()
                 entries = [n for n in self.metadata_cache if playlist.contains(n)]
                 d = do('daap.playlistsongs',
