@@ -178,25 +178,30 @@ class item(daap_handler):
 
 class container_list(daap_handler):
     def GET(self,database):
+        container_files = os.listdir('cache/containers')
+        container_files.sort()
+        container_do = []
+        for i, fn in enumerate(container_files):
+            container_do.append(do('dmap.listingitem',
+                                   [ do('dmap.itemid', i + 1 ),
+                                     do('dmap.containeritemid', i + 1),
+                                     do('dmap.itemname', fn) ]))
         d = do('daap.databaseplaylists',
                [ do('dmap.status', 200),
                  do('dmap.updatetype', 0),
-                 do('dmap.specifiedtotalcount', 1),
-                 do('dmap.returnedcount', 1),
+                 do('dmap.specifiedtotalcount', len(container_do)),
+                 do('dmap.returnedcount', len(container_do)),
                  do('dmap.listing',
-                    [ do('dmap.listingitem',
-                         [ do('dmap.itemid', 1),
-                           do('dmap.itemcount', 1),
-                           do('daap.baseplaylist', 1),
-                           do('dmap.itemname', 'Library')
-                           ])
-                      ])
+                    container_do)
                  ])
         self.h(web, d.encode())
 
 class container_item_list(daap_handler):
-    def GET(self, database, container):
-        return self.h(web, open('cache/playlist_1'))
+    def GET(self, did, cid):
+        container_files = os.listdir('cache/containers/')
+        container_files.sort()
+        return self.h(web, open(os.path.join('cache', 'containers', 
+                                             container_files[int(cid) - 1])))
 
 p = Processor(music_path="music")
 p.refresh()

@@ -1,5 +1,5 @@
 from mutagen.id3 import ID3NoHeaderError, ID3UnsupportedVersionError, ID3
-import os, sys, types, struct, md5
+import os, sys, types, struct, md5, StringIO
 from mutagen.mp3 import MP3
 from daap import do
 import playlists
@@ -88,6 +88,19 @@ class MetadataCacheItem:
         if self.daap_raw == None:
             self.read()
         return self.daap_raw
+
+    def get_md(self):
+        s = StringIO.StringIO(self.get_dmap_raw())
+        l = len(self.get_dmap_raw())
+        data = []
+        while s.tell() != l:
+            d = do()
+            d.processData(s)
+            data.append(d)
+        md = {}
+        for d in data:
+            md[d.codeName()] = d.value
+        return md
 
 class Processor:
     def __init__(self, **kwargs):
@@ -202,22 +215,23 @@ class Processor:
                       [ do('dmap.itemkind', 2),
                         do('dmap.itemid', md.id),
                         do('dmap.itemname', md.get_name()),
-                        do('dmap.containeritemid', 111124)
+                        do('dmap.containeritemid', md.id)
                         ])
 
         for x in dir(playlists):
-            p = eval('playlists.' + x)
-            if type(p) == types.ClassType and issubclass(p, playlists.Library):                
-                playlist = p()
+            pclass = eval('playlists.' + x)
+            if type(pclass) == types.ClassType and issubclass(pclass, playlists.Playlist) and pclass != playlists.Playlist:
+                print "Building playlist: " + pclass.name
+                playlist = pclass()
                 entries = [n for n in self.metadata_cache if playlist.contains(n)]
-            d = do('daap.playlistsongs',
-                   [ do('dmap.status', 200),
-                     do('dmap.updatetype', 0),
-                     do('dmap.specifiedtotalcount', len(entries)),
-                     do('dmap.returnedcount', len(entries)),
-                     do('dmap.listing',
-                       [ build_do (n) for n in entries ])
-                     ])
-            f = open(os.path.join('cache', 'playlist_1'), 'w')
-            f.write(d.encode())
-            f.close()
+                d = do('daap.playlistsongs',
+                       [ do('dmap.status', 200),
+                         do('dmap.updatetype', 0),
+                         do('dmap.specifiedtotalcount', len(entries)),
+                         do('dmap.returnedcount', len(entries)),
+                         do('dmap.listing',
+                            [ build_do (n) for n in entries ])
+                         ])
+                f = open(os.path.join('cache', 'containers', pclass.name), 'w')
+                f.write(d.encode())
+                f.close()
