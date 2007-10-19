@@ -252,5 +252,4 @@ class DAAPObject(object):
             log.debug('DAAPObject: Unknown code %s for type %s, writing raw data', code, self.code)
             self.value  = code
 
-def do(*args):
-    return DAAPObject(*args)
+do = DAAPObject
