@@ -11,7 +11,7 @@
 
 import struct, sys
 import logging
-from daap_data import *
+from spydaap.daap_data import *
 
 __all__ = ['DAAPError', 'DAAPObject', 'do']
 
