@@ -1,1 +1,1 @@
-from  spydaap.parser import mp3, avi
+from  spydaap.parser import mp3
