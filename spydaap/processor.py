@@ -1,9 +1,8 @@
-import mutagen.id3
-from mutagen.mp3 import MP3
 import os, sys, types, struct, md5, StringIO
 from daap import do
 import playlists
-mutagen.id3.ID3.PEDANTIC = False
+import spydaap.parser
+import config
 
 class MetadataCache:
     class Iter:
@@ -108,81 +107,35 @@ class Processor:
         if kwargs.has_key('cache_dir'):
             self.cache_dir = kwargs['cache_dir']
         else: self.cache_dir = 'cache'
-        self.metadata_cache = MetadataCache(os.path.join(self.cache_dir, 'items'))
+        self.metadata_cache = MetadataCache(os.path.join(self.cache_dir, 
+                                                         'items'))
+    parsers = []
+    for ms in dir(spydaap.parser):
+        m = spydaap.parser.__dict__[ms]
+        if type(m) == types.ModuleType:
+            for cs in dir(m):
+                c = m.__dict__[cs]
+                if type(c) == types.ClassType:
+                    parsers.append(c())
 
-    mp3_string_map = {
-        'TIT1': 'daap.songgrouping',
-        'TIT2': 'dmap.itemname',
-        'TPE1': 'daap.songartist',
-        'TCOM': 'daap.songcomposer',
-        'TCON': 'daap.songgenre',
-        'TPE1': 'daap.songartist',
-        'TALB': 'daap.songalbum',
-        }
-
-    mp3_int_map = {
-        'TDOR': 'daap.songyear',
-        'TBPM': 'daap.songbeatsperminute',
-        #'TLEN': 'daap.songtime',
-        }
-#do('daap.songdiscnumber', 1),
-#        do('daap.songgenre', 'Test'),
-#        do('daap.songdisccount', 1),
-#        do('daap.songcompilation', False),
-#        do('daap.songuserrating', 1),
-                                                     
-    def add_int_tags(self, mp3, d):
-        for k in mp3.tags.keys():
-            if self.mp3_int_map.has_key(k):
-                try: d.append(do(mp3_int_map[k], int(str(mp3.tags[k]))))
-                except: pass
-
-    def mp3(self, filename):
-        try:
-            mp3 = MP3(filename)
-            if mp3.tags != None:
-                d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) 
-                      for k in mp3.tags.keys() 
-                      if self.mp3_string_map.has_key(k) ]
-                self.add_int_tags(mp3, d)
-                try:
-                    if mp3.tags.has_key('TRCK'):
-                        t = str(mp3.tags['TRCK']).split('/')
-                        d.append(do('daap.songtracknumber', int(t[0])))
-                        if (len(t) == 2):
-                            d.append(do('daap.songtrackcount', int(t[1])))
-                except: pass
-                if mp3.tags.has_key('TIT2'):
-                    name = str(mp3.tags['TIT2'])
-                else: name = filename
-            else: 
-                d = []
-                name = filename
-            statinfo = os.stat(filename)
-            d.extend([do('daap.songsize', os.path.getsize(filename)),
-                      do('daap.songdateadded', statinfo.st_mtime),
-                      do('daap.songdatemodified', statinfo.st_mtime),
-                      do('daap.songtime', mp3.info.length * 1000),
-                      do('daap.songbitrate', mp3.info.bitrate / 1000),
-                      do('daap.songsamplerate', mp3.info.sample_rate)
-                      ])
-            return (d, name)
-        except Exception, e:
-            sys.stderr.write("Caught exception: while processing %s: %s " % (filename, str(e)) )
-            return (None, None)
-            
-    def refresh(self):
-        for path, dirs, files in os.walk(self.music_path):
+    def refresh(self, dir=None):
+        if dir == None: dir = self.music_path
+        for path, dirs, files in os.walk(dir):
+            for d in dirs:
+                if os.path.islink(os.path.join(path, d)):
+                    self.refresh(os.path.join(path,d))
             files.sort()
             for fn in files:
-                if not fn.lower().endswith('.mp3'): continue
                 ffn = os.path.join(path, fn)
                 digest = md5.md5(ffn)
                 md = self.metadata_cache.get_item(digest.hexdigest())
-                if (not(md.get_exists()) or (md.get_mtime() < os.stat(ffn).st_mtime)):
-                    (m, name) = self.mp3(ffn)
-                    if m != None:
-                        self.metadata_cache.write_entry(name, ffn, m)
+                if (not(md.get_exists()) or \
+                        (md.get_mtime() < os.stat(ffn).st_mtime)):
+                    for p in self.parsers:
+                        if p.understands(ffn):                  
+                            (m, name) = p.parse(ffn)
+                            if m != None:
+                                self.metadata_cache.write_entry(name, ffn, m)
 
     def build_list(self):
         def f (md):
@@ -190,8 +143,6 @@ class Processor:
                       [ do('dmap.itemkind', 2),
                         do('dmap.containeritemid', 2),
                         do('dmap.itemid', md.id),
-                        do('daap.songformat', 'mp3'),
-                        do('daap.songdescription', 'MPEG Audio File'),
                         md.get_dmap_raw()
                         ])
         children = [ f(md) for md in self.metadata_cache  ]

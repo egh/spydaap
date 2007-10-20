@@ -1,6 +1,7 @@
-import web, daap, sys, os, struct, re
-from daap import do
-from processor import Processor
+import web, sys, os, struct, re, spydaap.daap
+from spydaap.daap import do
+from spydaap.processor import Processor
+import config
 
 server_name = "test"
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
@@ -58,7 +59,7 @@ class server_info(daap_handler):
                     do('daap.protocolversion', '3.0'),
                     do('dmap.timeoutinterval', 1800),
                     do('dmap.itemname', server_name),
-                    #do('dmap.loginrequired', False),
+                    do('dmap.loginrequired', 0),
                     do('dmap.authenticationmethod', 0),
                     do('dmap.supportsextensions', 0),
                     do('dmap.supportsindex', 0),
@@ -75,13 +76,13 @@ class server_info(daap_handler):
 class content_codes(daap_handler):
     def GET(self):
         children = [ do('dmap.status', 200) ]
-        for code in daap.dmapCodeTypes.keys():
-            (name, dtype) = daap.dmapCodeTypes[code]
+        for code in spydaap.daap.dmapCodeTypes.keys():
+            (name, dtype) = spydaap.daap.dmapCodeTypes[code]
             d = do('dmap.dictionary',
                    [ do('dmap.contentcodesnumber', code),
                      do('dmap.contentcodesname', name),
                      do('dmap.contentcodestype',
-                        daap.dmapReverseDataTypes[dtype])
+                        spydaap.daap.dmapReverseDataTypes[dtype])
                      ])
             children.append(d)
         mccr = do('dmap.contentcodesresponse',
@@ -203,7 +204,7 @@ class container_item_list(daap_handler):
         return self.h(web, open(os.path.join('cache', 'containers', 
                                              container_files[int(cid) - 1])))
 
-p = Processor(music_path="music")
+p = Processor(music_path="media/")
 p.refresh()
 p.build_list()
 p.build_playlists()
