@@ -1,6 +1,6 @@
 import os, sys, types, struct, md5, StringIO
 from daap import do
-import playlists
+from spydaap import playlists
 import spydaap.parser
 import config
 
