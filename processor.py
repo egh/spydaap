@@ -221,8 +221,8 @@ class Processor:
                         ])
 
         for x in dir(playlists):
-            pclass = eval('playlists.' + x)
-            if type(pclass) == types.ClassType and issubclass(pclass, playlists.Playlist) and pclass != playlists.Playlist:
+            pclass = playlists.__dict__[x]
+            if type(pclass) == types.ClassType and issubclass(pclass, playlists.Playlist) and pclass.name != None:
                 playlist = pclass()
                 entries = [n for n in self.metadata_cache if playlist.contains(n)]
                 d = do('daap.playlistsongs',
