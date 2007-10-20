@@ -1,23 +1,33 @@
-import web, sys, os, struct, re, spydaap.daap
+import web, sys, os, struct, re, select, spydaap.daap, pybonjour
 from spydaap.daap import do
 from spydaap.processor import Processor
 import config
 
-server_name = "test"
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
-
+#drop_q = '(?:\\?.*)?'
 urls = (
-    itunes_re + '/', 'server_info',
-    itunes_re + '/server-info', 'server_info',
-    '/content-codes', 'content_codes',
-    '/databases', 'database_list',
-    '/databases/([0-9]+)/items', 'item_list',
-    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 'item',
-    '/databases/([0-9]+)/containers', 'container_list',
-    itunes_re + '/databases/([0-9]+)/containers/([0-9]+)/items', 'container_item_list',
-    '/login', 'login',
-    '/logout', 'logout',
-    '/update', 'update',
+    itunes_re + '/', 
+    'server_info', #
+    itunes_re + '/server-info', 
+    'server_info', #
+    '/content-codes', 
+    'content_codes', #
+    '/databases', 
+    'database_list', #
+    '/databases/([0-9]+)/items', 
+    'item_list', #
+    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 
+    'item', #
+    '/databases/([0-9]+)/containers', 
+    'container_list', #
+    itunes_re + '/databases/([0-9]+)/containers/([0-9]+)/items', 
+    'container_item_list', #
+    '/login', 
+    'login', #
+    '/logout', 
+    'logout', #
+    '/update',
+    'update', #
     )
 
 class daap_handler:
@@ -58,7 +68,7 @@ class server_info(daap_handler):
                     do('dmap.protocolversion', '2.0'),
                     do('daap.protocolversion', '3.0'),
                     do('dmap.timeoutinterval', 1800),
-                    do('dmap.itemname', server_name),
+                    do('dmap.itemname', spydaap.server_name),
                     do('dmap.loginrequired', 0),
                     do('dmap.authenticationmethod', 0),
                     do('dmap.supportsextensions', 0),
@@ -100,7 +110,7 @@ class database_list(daap_handler):
                     [ do('dmap.listingitem',
                          [ do('dmap.itemid', 1),
                            do('dmap.persistentid', 1),
-                           do('dmap.itemname', server_name),
+                           do('dmap.itemname', spydaap.server_name),
                            do('dmap.itemcount', 12),
                            do('dmap.containercount', 1)])
                     ])
@@ -209,4 +219,26 @@ p.refresh()
 p.build_list()
 p.build_playlists()
 
+def register_callback(sdRef, flags, errorCode, name, regtype, domain):
+    if errorCode == pybonjour.kDNSServiceErr_NoError:
+        print 'Registered service:'
+        print '  name    =', name
+        print '  regtype =', regtype
+        print '  domain  =', domain
+
+sdRef = pybonjour.DNSServiceRegister(name = spydaap.server_name,
+                                     regtype = "_daap._tcp",
+                                     port = spydaap.port,
+                                     callBack = register_callback)
+
+while True:
+    ready = select.select([sdRef], [], [])
+    if sdRef in ready[0]:
+        pybonjour.DNSServiceProcessResult(sdRef)
+        break
+
+#hacky; there is a better way
+sys.argv.append(str(spydaap.port))
+
 if __name__ == "__main__": web.run(urls, globals())
+sdRef.close()
