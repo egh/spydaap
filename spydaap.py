@@ -3,8 +3,12 @@ from spydaap.daap import do
 from spydaap.processor import Processor
 import config
 
+#itunes sends request for:
+#GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
+#so we must hack the urls; annoying.
+
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
-#drop_q = '(?:\\?.*)?'
+drop_q = '(?:\\?.*)?'
 urls = (
     itunes_re + '/', 
     'server_info', #
@@ -16,7 +20,7 @@ urls = (
     'database_list', #
     '/databases/([0-9]+)/items', 
     'item_list', #
-    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)', 
+    itunes_re + '/databases/([0-9]+)/items/([0-9]+)\\.([0-9a-z]+)' + drop_q, 
     'item', #
     '/databases/([0-9]+)/containers', 
     'container_list', #
@@ -163,6 +167,7 @@ class ContentRangeFile:
 class item(daap_handler):
     def GET(self,database,item,format):
         #web.request.chunked_write = True
+        sys.stderr.write(str(web.ctx.environ))
         fi = open(os.path.join('cache', 'cache_files'), 'r')
         fi.seek(int(item) * 32)
         cfn = fi.read(32)
@@ -240,5 +245,7 @@ while True:
 #hacky; there is a better way
 sys.argv.append(str(spydaap.port))
 
-if __name__ == "__main__": web.run(urls, globals())
+web.webapi.internalerror = web.debugerror
+#if __name__ == "__main__": web.run(urls, globals())
+web.wsgi.runwsgi(web.webapi.wsgifunc(web.webpyfunc(urls, globals())))
 sdRef.close()
