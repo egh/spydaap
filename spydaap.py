@@ -169,7 +169,7 @@ class item(daap_handler):
         #web.request.chunked_write = True
         sys.stderr.write(str(web.ctx.environ))
         fi = open(os.path.join('cache', 'cache_files'), 'r')
-        fi.seek(int(item) * 32)
+        fi.seek((int(item) - 1) * 32)
         cfn = fi.read(32)
         fi.close()
         cfi = open(os.path.join('cache', 'items', cfn))

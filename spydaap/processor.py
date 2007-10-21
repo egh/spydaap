@@ -142,7 +142,7 @@ class Processor:
             return do('dmap.listingitem', 
                       [ do('dmap.itemkind', 2),
                         do('dmap.containeritemid', 2),
-                        do('dmap.itemid', md.id),
+                        do('dmap.itemid', md.id + 1),
                         md.get_dmap_raw()
                         ])
         children = [ f(md) for md in self.metadata_cache  ]
@@ -166,9 +166,9 @@ class Processor:
         def build_do(md):
             return do('dmap.listingitem',
                       [ do('dmap.itemkind', 2),
-                        do('dmap.itemid', md.id),
+                        do('dmap.itemid', md.id + 1),
                         do('dmap.itemname', md.get_name()),
-                        do('dmap.containeritemid', md.id)
+                        do('dmap.containeritemid', md.id + 1)
                         ])
 
         for x in dir(playlists):
