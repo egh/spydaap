@@ -1,7 +1,7 @@
 import os, sys, types, struct, md5, StringIO
 from daap import do
 from spydaap import playlists
-from spydaap.mdcache import mdcache
+from spydaap.metadata import mdcache
 import spydaap.parser
 import config
 

@@ -222,7 +222,7 @@ class container_item_list(daap_handler):
 
 media_path = "media"
 p = Processor()
-spydaap.mdcache.mdcache.build("media/")
+spydaap.metadata.mdcache.build("media/")
 p.build_list()
 p.build_playlists()
 
