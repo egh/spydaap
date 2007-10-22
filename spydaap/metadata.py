@@ -65,6 +65,11 @@ class MetadataCache:
                             (m, name) = p.parse(ffn)
                             if m != None:
                                 self.write_entry(name, ffn, m)
+        
+        fi = open(os.path.join(self.dir, '..', 'index'), 'w')
+        for md in mdcache:
+            fi.write(md.pid)
+        fi.close()
 
 class MetadataCacheItem:
     def __init__(self, dir, pid, id):
