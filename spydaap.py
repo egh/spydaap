@@ -1,7 +1,7 @@
 import web, sys, os, struct, re, select, spydaap.daap, pybonjour
 from spydaap.daap import do
-from spydaap.processor import Processor
-import spydaap.cache
+from spydaap.cache import cache
+import spydaap.metadata, spydaap.database
 import config
 
 #itunes sends request for:
@@ -124,7 +124,7 @@ class database_list(daap_handler):
 
 class item_list(daap_handler):
     def GET(self,database_id):
-        return self.h(web, open(os.path.join('cache', 'item_list')))
+        return self.h(web, cache.get('item_list', spydaap.database.builder.build_list))
 
 server_revision = 1
 
@@ -221,10 +221,7 @@ class container_item_list(daap_handler):
                                              container_files[int(cid) - 1])))
 
 media_path = "media"
-p = Processor()
 spydaap.metadata.mdcache.build("media/")
-p.build_list()
-p.build_playlists()
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     if errorCode == pybonjour.kDNSServiceErr_NoError:
