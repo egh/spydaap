@@ -1,6 +1,7 @@
 import web, sys, os, struct, re, select, spydaap.daap, pybonjour
 from spydaap.daap import do
 from spydaap.processor import Processor
+import spydaap.cache
 import config
 
 #itunes sends request for:
@@ -219,8 +220,9 @@ class container_item_list(daap_handler):
         return self.h(web, open(os.path.join('cache', 'containers', 
                                              container_files[int(cid) - 1])))
 
-p = Processor(music_path="media/")
-p.refresh()
+media_path = "media"
+p = Processor()
+spydaap.mdcache.mdcache.build("media/")
 p.build_list()
 p.build_playlists()
 

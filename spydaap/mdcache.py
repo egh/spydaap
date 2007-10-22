@@ -1,6 +1,16 @@
-import os, struct
+import os, struct, hashlib, spydaap.parser, types
+import config
 
 class MetadataCache:
+    parsers = []
+    for ms in dir(spydaap.parser):
+        m = spydaap.parser.__dict__[ms]
+        if type(m) == types.ModuleType:
+            for cs in dir(m):
+                c = m.__dict__[cs]
+                if type(c) == types.ClassType:
+                    parsers.append(c())
+
     class Iter:
         def __init__(self, dir):
             self.dir = dir
@@ -20,6 +30,8 @@ class MetadataCache:
 
     def __init__(self, dir):
         self.dir = dir
+        if (not(os.path.exists(self.dir))):
+            os.mkdir(self.dir)
         
     def __iter__(self):
         return MetadataCache.Iter(self.dir)
@@ -31,10 +43,28 @@ class MetadataCache:
         data = "".join([ d.encode() for d in daap])
         data = struct.pack('!i%ss' % len(name), len(name), name) + data
         data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
-        cachefn = os.path.join(self.dir, md5.md5(fn).hexdigest())
+        cachefn = os.path.join(self.dir, hashlib.md5(fn).hexdigest())
         f = open(cachefn, 'w')
         f.write(data)
         f.close()
+
+    def build(self, dir):
+        for path, dirs, files in os.walk(dir):
+            for d in dirs:
+                if os.path.islink(os.path.join(path, d)):
+                    self.build(os.path.join(path,d))
+            files.sort()
+            for fn in files:
+                ffn = os.path.join(path, fn)
+                digest = hashlib.md5(ffn)
+                md = self.get_item(digest.hexdigest())
+                if (not(md.get_exists()) or \
+                        (md.get_mtime() < os.stat(ffn).st_mtime)):
+                    for p in self.parsers:
+                        if p.understands(ffn):                  
+                            (m, name) = p.parse(ffn)
+                            if m != None:
+                                self.write_entry(name, ffn, m)
 
 class MetadataCacheItem:
     def __init__(self, dir, pid, id):
@@ -96,3 +126,6 @@ class MetadataCacheItem:
         for d in data:
             md[d.codeName()] = d.value
         return md
+
+dir='md_cache'
+mdcache = MetadataCache(dir)
