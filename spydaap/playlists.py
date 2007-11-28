@@ -27,6 +27,10 @@ class Builder:
                          ])
                 f.write(d.encode())
 
+    def get_playlist_list(self):
+        
+builder = Builder()
+
 class Playlist:
     name = None
     pass

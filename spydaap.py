@@ -211,8 +211,7 @@ class container_item_list(daap_handler):
         return self.h(web, open(os.path.join('cache', 'containers', 
                                              container_files[int(cid) - 1])))
 
-media_path = "media"
-spydaap.metadata.mdcache.build("media/")
+spydaap.metadata.mdcache.build(spydaap.media_path)
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     if errorCode == pybonjour.kDNSServiceErr_NoError:
