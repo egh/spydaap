@@ -1,0 +1,40 @@
+* Install web.py
+
+** Ubuntu/Debian
+
+> [sudo] apt-get install python-webpy
+
+** Others
+
+<http://webpy.org>
+
+* Install mutagen
+
+** Ubuntu/Debian
+
+> sudo apt-get install python-mutagen
+
+** Others
+
+See <http://www.sacredchao.net/quodlibet/wiki/Development/Mutagen>
+
+* Install pybonjour 
+
+** All
+
+See <http://o2s.csail.mit.edu/o2s-wiki/pybonjour>
+
+> cd spydaap
+
+> mkdir media
+
+Media is the default directory where spydaap looks for media files. It
+can be change by editing config.py.
+
+> ln -s ~/music media/
+
+Link in all the directories whose files you'd like to make available.
+
+> ./spydaap
+
+Easy daemonizing will come soon.
