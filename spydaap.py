@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import web, sys, os, struct, re, select, spydaap.daap, pybonjour
 from spydaap.daap import do
 from spydaap.cache import cache
