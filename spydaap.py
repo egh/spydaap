@@ -118,8 +118,8 @@ class database_list(daap_handler):
                            do('dmap.itemname', spydaap.server_name),
                            do('dmap.itemcount', 12),
                            do('dmap.containercount', 1)])
-                    ])
-                ])
+                      ])
+                 ])
         self.h(web,d.encode())
 
 class item_list(daap_handler):
@@ -149,7 +149,6 @@ class ContentRangeFile:
         to_read = self.chunk
         if (self.end != None):
             if (self.read >= self.end):
-                sys.stderr.write('done')
                 self.parent.close()
                 raise StopIteration
             if (to_read + self.read > self.end):
@@ -167,16 +166,7 @@ class ContentRangeFile:
 
 class item(daap_handler):
     def GET(self,database,item,format):
-        #web.request.chunked_write = True
-        sys.stderr.write(str(web.ctx.environ))
-        fi = open(os.path.join('cache', 'cache_files'), 'r')
-        fi.seek((int(item) - 1) * 32)
-        cfn = fi.read(32)
-        fi.close()
-        cfi = open(os.path.join('cache', 'items', cfn))
-        fn_len = struct.unpack('!i', cfi.read(4))[0]
-        fn = cfi.read(fn_len)
-        cfi.close()
+        fn = spydaap.metadata.mdcache.get_item_by_id(item).get_original_filename()
         if (web.ctx.environ.has_key('HTTP_RANGE')):
             rs = web.ctx.environ['HTTP_RANGE']
             m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
