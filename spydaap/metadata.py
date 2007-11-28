@@ -39,6 +39,13 @@ class MetadataCache:
     def get_item(self, id):
         return MetadataCacheItem(self.dir, id, None)
 
+    def get_item_by_id(self, id):
+        fi = open(os.path.join(self.dir, '..', 'index'), 'r')
+        fi.seek((int(id) - 1) * 32)
+        cfn = fi.read(32)
+        fi.close()
+        return self.get_item(cfn)
+
     def write_entry(self, name, fn, daap):
         data = "".join([ d.encode() for d in daap])
         data = struct.pack('!i%ss' % len(name), len(name), name) + data
