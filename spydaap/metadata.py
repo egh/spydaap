@@ -139,4 +139,4 @@ class MetadataCacheItem:
             md[d.codeName()] = d.value
         return md
 
-mdcache = MetadataCache(spydaap.cache_dir + "/media/")
+mdcache = MetadataCache(os.path.join(spydaap.cache_dir, "media"))
