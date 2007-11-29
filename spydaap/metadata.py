@@ -1,4 +1,4 @@
-import os, struct, hashlib, spydaap.parser, types
+import os, struct, hashlib, spydaap.parser, types, spydaap
 import config
 
 class MetadataCache:
@@ -139,5 +139,4 @@ class MetadataCacheItem:
             md[d.codeName()] = d.value
         return md
 
-dir='md_cache'
-mdcache = MetadataCache(dir)
+mdcache = MetadataCache(spydaap.cache_dir + "/media/")

@@ -8,3 +8,5 @@ from spydaap.parser import mp3
 
 #top path to scan for media
 #spydaap.media_path = "media"
+
+#spydaap.cache_dir = 'cache'

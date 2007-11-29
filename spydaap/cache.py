@@ -1,4 +1,4 @@
-import hashlib, os, sys
+import hashlib, os, sys, spydaap
 
 class Cache:
     def __init__(self, dir):
@@ -16,5 +16,4 @@ class Cache:
         sys.stderr.write(str(fn))
         return open(fn)
 
-dir = "cache"
-cache = Cache(dir)
+cache = Cache(spydaap.cache_dir)
