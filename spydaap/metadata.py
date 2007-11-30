@@ -31,11 +31,7 @@ class MetadataCache(spydaap.cache.OrderedCache):
                             (m, name) = p.parse(ffn)
                             if m != None:
                                 MetadataCacheItem.write_entry(self.dir, name, ffn, m)
-        
-        fi = open(os.path.join(self.dir, '..', 'index'), 'w')
-        for md in mdcache:
-            fi.write(md.pid)
-        fi.close()
+        self.build_index()
 
 class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
     @classmethod
@@ -49,30 +45,15 @@ class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
         f.close()
 
     def __init__(self, cache, pid, id):
-        self.cache = cache
-        self.pid = pid
-        self.id = id
-        self.fn = os.path.join(self.cache.dir, pid)
+        super(MetadataCacheItem, self).__init__(cache, pid, id)
         self.file = None
         self.daap = None
         self.name = None
         self.original_filename = None
         self.daap_raw = None
 
-    def get_mtime(self):
-        return os.stat(self.fn).st_mtime
-
-    def get_exists(self):
-        return os.path.exists(self.fn)
- 
-    def get_id(self):
-        return self.id
-    
-    def get_pid(self):
-        return self.pid
-    
     def read(self):
-        f = open(self.fn)
+        f = open(self.path)
         fn_len = struct.unpack('!i', f.read(4))[0]
         self.original_filename = f.read(fn_len)
         name_len = struct.unpack('!i', f.read(4))[0]
