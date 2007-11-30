@@ -207,7 +207,7 @@ class container_item_list(daap_handler):
         container = spydaap.containers.container_cache.get_item_by_id(container_id)
         return self.h(web, container.get_daap_raw())
 
-#spydaap.metadata.mdcache.build(spydaap.media_path)
+spydaap.metadata.mdcache.build(spydaap.media_path)
 spydaap.containers.container_cache.build()
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
