@@ -13,3 +13,4 @@ from spydaap.parser import mp3
 #spydaap.cache_dir = 'cache'
 
 spydaap.container_list.append(spydaap.playlists.Genre('reggae', ["reggae", "reggae: dub", "dub"]))
+spydaap.container_list.append(spydaap.playlists.Recent('last 30 days', (60 * 60 * 24 * 30)))
