@@ -1,5 +1,6 @@
 import spydaap
 from spydaap.parser import mp3
+
 #to process .mov files
 #from spydaap.parser import mp3,mov
 
@@ -10,3 +11,5 @@ from spydaap.parser import mp3
 #spydaap.media_path = "media"
 
 #spydaap.cache_dir = 'cache'
+
+spydaap.container_list.append(spydaap.playlists.Genre('reggae', ["reggae", "reggae: dub", "dub"]))
