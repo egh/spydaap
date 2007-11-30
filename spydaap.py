@@ -2,7 +2,7 @@
 import web, sys, os, struct, re, select, spydaap.daap, pybonjour
 from spydaap.daap import do
 from spydaap.cache import cache
-import spydaap.metadata, spydaap.database
+import spydaap.metadata, spydaap.database, spydaap.containers
 import config
 
 #itunes sends request for:
@@ -186,14 +186,12 @@ class item(daap_handler):
 
 class container_list(daap_handler):
     def GET(self,database):
-        container_files = os.listdir('cache/containers')
-        container_files.sort()
         container_do = []
-        for i, fn in enumerate(container_files):
+        for i, c in enumerate(spydaap.containers.container_cache):
             container_do.append(do('dmap.listingitem',
                                    [ do('dmap.itemid', i + 1 ),
                                      do('dmap.containeritemid', i + 1),
-                                     do('dmap.itemname', fn) ]))
+                                     do('dmap.itemname', c.get_name()) ]))
         d = do('daap.databaseplaylists',
                [ do('dmap.status', 200),
                  do('dmap.updatetype', 0),
@@ -205,13 +203,12 @@ class container_list(daap_handler):
         self.h(web, d.encode())
 
 class container_item_list(daap_handler):
-    def GET(self, did, cid):
-        container_files = os.listdir('cache/containers/')
-        container_files.sort()
-        return self.h(web, open(os.path.join('cache', 'containers', 
-                                             container_files[int(cid) - 1])))
+    def GET(self, database_id, container_id):
+        container = spydaap.containers.container_cache.get_item_by_id(container_id)
+        return self.h(web, container.get_daap_raw())
 
-spydaap.metadata.mdcache.build(spydaap.media_path)
+#spydaap.metadata.mdcache.build(spydaap.media_path)
+spydaap.containers.container_cache.build()
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     if errorCode == pybonjour.kDNSServiceErr_NoError:

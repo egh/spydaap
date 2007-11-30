@@ -1,5 +1,6 @@
-import os, struct, hashlib, spydaap.parser, types, spydaap
+import os, struct, hashlib, spydaap.parser, types, spydaap, StringIO
 import config
+from spydaap.daap import do
 
 class MetadataCache(spydaap.cache.OrderedCache):
     parsers = []
