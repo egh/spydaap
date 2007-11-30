@@ -15,7 +15,7 @@ class ContainerCache(spydaap.cache.OrderedCache):
                      do('dmap.containeritemid', md.id + 1)
                      ] )
             return d
-
+        pid_list = []
         for pl in spydaap.container_list:
             entries = [n for n in spydaap.metadata.mdcache if pl.contains(n)]
             d = do('daap.playlistsongs',
@@ -27,7 +27,8 @@ class ContainerCache(spydaap.cache.OrderedCache):
                         [ build_do (n) for n in entries ])
                      ])
             ContainerCacheItem.write_entry(self.dir, pl.name, d)
-        self.build_index()
+            pid_list.append(md5.md5(pl.name).hexdigest())
+        self.build_index(pid_list)
         
 class ContainerCacheItem(spydaap.cache.OrderedCacheItem):
     @classmethod

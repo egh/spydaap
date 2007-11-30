@@ -20,19 +20,16 @@ class OrderedCache(object):
     class Iter:
         def __init__(self, cache):
             self.cache = cache
-            self.files = [ f for f in os.listdir(self.cache.dir) if f != "index"]
-            self.files.sort()
             self.n = 0
 
         def __iter__(self):
             return self
-        
+
         def next(self):
-            if self.n == len(self.files):
+            if self.n >= len(self.cache):
                 raise StopIteration
-            fn = self.files[self.n]
             self.n = self.n + 1 
-            return self.cache.get_item_by_pid(fn, (self.n - 1))
+            return self.cache.get_item_by_id(self.n)
 
     def __init__(self, dir):
         self.dir = dir
@@ -49,10 +46,16 @@ class OrderedCache(object):
         fi.close()
         return self.get_item_by_pid(cfn, id)
 
-    def build_index(self):
+    def __len__(self):
+        return os.path.getsize(os.path.join(self.dir, 'index')) / 32
+
+    def build_index(self, pid_list=None):
+        if pid_list == None:
+            pid_list = [ f for f in os.listdir(self.dir) if f != "index"]
+            pid_list.sort()
         fi = open(os.path.join(self.dir, 'index'), 'w')
-        for i in self:
-            fi.write(i.pid)
+        for pid in pid_list:
+            fi.write(pid)
         fi.close()
 
 class OrderedCacheItem(object):
