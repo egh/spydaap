@@ -18,12 +18,11 @@ class Cache:
 
 class OrderedCache:
     class Iter:
-        def __init__(self, dir, cache):
-            self.dir = dir
-            self.files = os.listdir(self.dir)
+        def __init__(self, cache):
+            self.cache = cache
+            self.files = os.listdir(self.cache.dir)
             self.files.sort()
             self.n = 0
-            self.cache = cache
 
         def __iter__(self):
             return self
@@ -33,7 +32,7 @@ class OrderedCache:
                 raise StopIteration
             fn = self.files[self.n]
             self.n = self.n + 1 
-            return self.cache.get_item_by_filename(fn, (self.n - 1))
+            return self.cache.get_item_by_pid(fn, (self.n - 1))
 
     def __init__(self, dir):
         self.dir = dir
@@ -41,14 +40,14 @@ class OrderedCache:
             os.mkdir(self.dir)
         
     def __iter__(self):
-        return OrderedCache.Iter(self.dir, self)
+        return OrderedCache.Iter(self)
 
     def get_item_by_id(self, id):
         fi = open(os.path.join(self.dir, '..', 'index'), 'r')
         fi.seek((int(id) - 1) * 32)
         cfn = fi.read(32)
         fi.close()
-        return self.get_item(cfn)
+        return self.get_item_by_pid(cfn, id)
 
 class OrderedCacheItem:
     pass

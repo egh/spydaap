@@ -11,12 +11,9 @@ class MetadataCache(spydaap.cache.OrderedCache):
                 if type(c) == types.ClassType:
                     parsers.append(c())
 
-    def get_item(self, id):
-        return MetadataCacheItem(self, id, None)
-
-    def get_item_by_filename(self, fn, n=None):
-        return MetadataCacheItem(self, fn, n)
-
+    def get_item_by_pid(self, pid, n=None):
+        return MetadataCacheItem(self, pid, n)
+    
     def build(self, dir):
         for path, dirs, files in os.walk(dir):
             for d in dirs:
@@ -26,7 +23,7 @@ class MetadataCache(spydaap.cache.OrderedCache):
             for fn in files:
                 ffn = os.path.join(path, fn)
                 digest = hashlib.md5(ffn)
-                md = self.get_item(digest.hexdigest())
+                md = self.get_item_by_pid(digest.hexdigest())
                 if (not(md.get_exists()) or \
                         (md.get_mtime() < os.stat(ffn).st_mtime)):
                     for p in self.parsers:
