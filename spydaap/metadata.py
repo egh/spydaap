@@ -12,10 +12,10 @@ class MetadataCache(spydaap.cache.OrderedCache):
                     parsers.append(c())
 
     def get_item(self, id):
-        return MetadataCacheItem(self.dir, id, None)
+        return MetadataCacheItem(self, id, None)
 
     def get_item_by_filename(self, fn, n=None):
-        return MetadataCacheItem(self.dir, fn, n)
+        return MetadataCacheItem(self, fn, n)
 
     def build(self, dir):
         for path, dirs, files in os.walk(dir):
@@ -40,7 +40,7 @@ class MetadataCache(spydaap.cache.OrderedCache):
             fi.write(md.pid)
         fi.close()
 
-class MetadataCacheItem:
+class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
     @classmethod
     def write_entry(self, dir, name, fn, daap):
         data = "".join([ d.encode() for d in daap])
@@ -51,11 +51,11 @@ class MetadataCacheItem:
         f.write(data)
         f.close()
 
-    def __init__(self, dir, pid, id):
-        self.dir = dir
+    def __init__(self, cache, pid, id):
+        self.cache = cache
         self.pid = pid
         self.id = id
-        self.fn = os.path.join(dir, pid)
+        self.fn = os.path.join(self.cache.dir, pid)
         self.file = None
         self.daap = None
         self.name = None

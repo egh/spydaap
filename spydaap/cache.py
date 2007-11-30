@@ -50,4 +50,7 @@ class OrderedCache:
         fi.close()
         return self.get_item(cfn)
 
+class OrderedCacheItem:
+    pass
+
 cache = Cache(spydaap.cache_dir)
