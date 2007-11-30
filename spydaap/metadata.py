@@ -1,7 +1,7 @@
 import os, struct, hashlib, spydaap.parser, types, spydaap
 import config
 
-class MetadataCache:
+class MetadataCache(spydaap.cache.OrderedCache):
     parsers = []
     for ms in dir(spydaap.parser):
         m = spydaap.parser.__dict__[ms]
@@ -11,40 +11,11 @@ class MetadataCache:
                 if type(c) == types.ClassType:
                     parsers.append(c())
 
-    class Iter:
-        def __init__(self, dir):
-            self.dir = dir
-            self.files = os.listdir(self.dir)
-            self.files.sort()
-            self.n = 0
-        
-        def __iter__(self):
-            return self
-        
-        def next(self):
-            if self.n == len(self.files):
-                raise StopIteration
-            fn = self.files[self.n]
-            self.n = self.n + 1 
-            return MetadataCacheItem(self.dir, fn, (self.n - 1))
-
-    def __init__(self, dir):
-        self.dir = dir
-        if (not(os.path.exists(self.dir))):
-            os.mkdir(self.dir)
-        
-    def __iter__(self):
-        return MetadataCache.Iter(self.dir)
-
     def get_item(self, id):
         return MetadataCacheItem(self.dir, id, None)
 
-    def get_item_by_id(self, id):
-        fi = open(os.path.join(self.dir, '..', 'index'), 'r')
-        fi.seek((int(id) - 1) * 32)
-        cfn = fi.read(32)
-        fi.close()
-        return self.get_item(cfn)
+    def get_item_by_filename(self, fn, n=None):
+        return MetadataCacheItem(self.dir, fn, n)
 
     def build(self, dir):
         for path, dirs, files in os.walk(dir):
