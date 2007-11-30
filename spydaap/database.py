@@ -10,7 +10,7 @@ class Builder:
             return do('dmap.listingitem', 
                       [ do('dmap.itemkind', 2),
                         do('dmap.containeritemid', 2),
-                        do('dmap.itemid', md.id + 1),
+                        do('dmap.itemid', md.id),
                         md.get_dmap_raw()
                         ])
         children = [ build (md) for md in mdcache  ]
