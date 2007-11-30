@@ -46,15 +46,6 @@ class MetadataCache:
         fi.close()
         return self.get_item(cfn)
 
-    def write_entry(self, name, fn, daap):
-        data = "".join([ d.encode() for d in daap])
-        data = struct.pack('!i%ss' % len(name), len(name), name) + data
-        data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
-        cachefn = os.path.join(self.dir, hashlib.md5(fn).hexdigest())
-        f = open(cachefn, 'w')
-        f.write(data)
-        f.close()
-
     def build(self, dir):
         for path, dirs, files in os.walk(dir):
             for d in dirs:
@@ -71,7 +62,7 @@ class MetadataCache:
                         if p.understands(ffn):                  
                             (m, name) = p.parse(ffn)
                             if m != None:
-                                self.write_entry(name, ffn, m)
+                                MetadataCacheItem.write_entry(self.dir, name, ffn, m)
         
         fi = open(os.path.join(self.dir, '..', 'index'), 'w')
         for md in mdcache:
@@ -79,6 +70,16 @@ class MetadataCache:
         fi.close()
 
 class MetadataCacheItem:
+    @classmethod
+    def write_entry(self, dir, name, fn, daap):
+        data = "".join([ d.encode() for d in daap])
+        data = struct.pack('!i%ss' % len(name), len(name), name) + data
+        data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
+        cachefn = os.path.join(dir, hashlib.md5(fn).hexdigest())
+        f = open(cachefn, 'w')
+        f.write(data)
+        f.close()
+
     def __init__(self, dir, pid, id):
         self.dir = dir
         self.pid = pid
