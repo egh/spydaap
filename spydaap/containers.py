@@ -1,4 +1,4 @@
-import spydaap, os, struct, hashlib
+import spydaap, os, struct, md5
 from spydaap.daap import do
 import config
 
@@ -34,7 +34,7 @@ class ContainerCacheItem(spydaap.cache.OrderedCacheItem):
     def write_entry(self, dir, name, d):
         data = struct.pack('!i%ss' % len(name), len(name), name)
         data = data + d.encode()
-        cachefn = os.path.join(dir, hashlib.md5(name).hexdigest())
+        cachefn = os.path.join(dir, md5.md5(name).hexdigest())
         f = open(cachefn, 'w')
         f.write(data)
         f.close()

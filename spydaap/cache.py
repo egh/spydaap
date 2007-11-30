@@ -1,4 +1,4 @@
-import hashlib, os, sys, spydaap
+import md5, os, sys, spydaap
 
 class Cache:
     def __init__(self, dir):
@@ -7,7 +7,7 @@ class Cache:
             os.mkdir(self.dir)
     
     def get(self, id, func):
-        id = hashlib.md5(id).hexdigest()
+        id = md5.md5(id).hexdigest()
         fn = os.path.join(self.dir, id)
         if (not(os.path.exists(fn))):
             f = open(fn, 'w')

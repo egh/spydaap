@@ -1,4 +1,4 @@
-import os, struct, hashlib, spydaap.parser, types, spydaap, StringIO
+import os, struct, md5, spydaap.parser, types, spydaap, StringIO
 import config
 from spydaap.daap import do
 
@@ -23,7 +23,7 @@ class MetadataCache(spydaap.cache.OrderedCache):
             files.sort()
             for fn in files:
                 ffn = os.path.join(path, fn)
-                digest = hashlib.md5(ffn)
+                digest = md5.md5(ffn)
                 md = self.get_item_by_pid(digest.hexdigest())
                 if (not(md.get_exists()) or \
                         (md.get_mtime() < os.stat(ffn).st_mtime)):
@@ -40,7 +40,7 @@ class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
         data = "".join([ d.encode() for d in daap])
         data = struct.pack('!i%ss' % len(name), len(name), name) + data
         data = struct.pack('!i%ss' % len(fn), len(fn), fn) + data
-        cachefn = os.path.join(dir, hashlib.md5(fn).hexdigest())
+        cachefn = os.path.join(dir, md5.md5(fn).hexdigest())
         f = open(cachefn, 'w')
         f.write(data)
         f.close()
