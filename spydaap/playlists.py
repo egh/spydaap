@@ -1,3 +1,5 @@
+import os, time
+
 class Playlist:
     name = None
     pass
@@ -23,3 +25,12 @@ class Genre(Playlist):
                 return songgenre == self.genre
             elif type(self.genre) == list:
                 return songgenre in self.genre
+
+class Recent(Playlist):
+     def __init__(self, name, seconds=604800):
+     	 self.name = name
+	 self.seconds = seconds
+
+     def contains(self, md):
+         f_ctime = os.stat(md.get_original_filename()).st_ctime
+         return ((f_ctime + self.seconds) > time.time())
