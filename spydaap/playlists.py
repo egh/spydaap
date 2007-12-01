@@ -47,3 +47,13 @@ class Recent(Playlist):
      def contains(self, md):
          f_ctime = os.stat(md.get_original_filename()).st_ctime
          return ((f_ctime + self.seconds) > time.time())
+
+class Rating(Playlist):
+    def __init__(self, name, rating):
+        self.name = name
+        self.rating = rating
+
+    def contains(self, md):
+        if md.has_key('daap.songuserrating'):
+            return md['daap.songuserrating'] >= self.rating
+        else: return False

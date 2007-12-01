@@ -31,6 +31,14 @@ class Mp3Parser(spydaap.parser.Parser):
                     d.append(do(self.mp3_int_map[k], int(str(mp3.tags[k]))))
                 except: pass
 
+    def handle_rating(self, mp3, d):
+        try:
+            if mp3.tags.has_key('POPM'):
+                rating = int(mp3.tags['POPM'] * (0.39215686274509803))
+                print rating
+                d.append(do('daap.songuserrating', rating))
+        except: pass
+
     file_re = re.compile(".*\\.[mM][pP]3$")
     def understands(self, filename):
         return self.file_re.match(filename)
@@ -43,6 +51,7 @@ class Mp3Parser(spydaap.parser.Parser):
                       for k in mp3.tags.keys() 
                       if self.mp3_string_map.has_key(k) ]
                 self.add_int_tags(mp3, d)
+                self.handle_rating (mp3, d)
                 try:
                     if mp3.tags.has_key('TRCK'):
                         t = str(mp3.tags['TRCK']).split('/')
