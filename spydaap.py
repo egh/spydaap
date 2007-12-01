@@ -212,11 +212,7 @@ spydaap.containers.container_cache.clean()
 spydaap.containers.container_cache.build()
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
-    if errorCode == pybonjour.kDNSServiceErr_NoError:
-        print 'Registered service:'
-        print '  name    =', name
-        print '  regtype =', regtype
-        print '  domain  =', domain
+    pass
 
 sdRef = pybonjour.DNSServiceRegister(name = spydaap.server_name,
                                      regtype = "_daap._tcp",
