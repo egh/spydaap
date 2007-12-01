@@ -18,6 +18,7 @@ class ContainerCache(spydaap.cache.OrderedCache):
         pid_list = []
         for pl in spydaap.container_list:
             entries = [n for n in spydaap.metadata.mdcache if pl.contains(n)]
+            pl.sort(entries)
             d = do('daap.playlistsongs',
                    [ do('dmap.status', 200),
                      do('dmap.updatetype', 0),

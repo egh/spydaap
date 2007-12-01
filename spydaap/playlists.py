@@ -2,7 +2,8 @@ import os, time
 
 class Playlist:
     name = None
-    pass
+    def sort(self, entries):
+        pass
 
 class Library(Playlist):
     def __init__(self):
@@ -38,7 +39,22 @@ class YearRange(Playlist):
         else:
             year = md['daap.songyear']
             return year >= self.first and year <= self.last
-
+    
+    def sort(self, entries):
+        def s(a,b):
+            r = cmp(a['daap.songyear'], b['daap.songyear']) 
+            if r != 0:
+                return r
+            else:
+                if a.has_key('daap.songartist') and b.has_key('daap.songartist'):
+                    return cmp(a['daap.songartist'], b['daap.songartist'])
+                elif a.has_key('daap.songartist'):
+                    return 1
+                elif b.has_key('daap.songartist'):
+                    return -1
+                else: return 0
+        entries.sort(cmp=s)
+    
 class Recent(Playlist):
      def __init__(self, name, seconds=604800):
      	 self.name = name
