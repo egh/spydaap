@@ -58,6 +58,10 @@ class OrderedCache(object):
             fi.write(pid)
         fi.close()
 
+    def clean(self):
+        for f in os.listdir(self.dir):
+            os.remove(os.path.join(self.dir, f))
+        
 class OrderedCacheItem(object):
     def __init__(self, cache, pid, id):
         self.cache = cache
