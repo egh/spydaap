@@ -17,14 +17,27 @@ class Genre(Playlist):
         self.genre = genre
     
     def contains(self, md):
-        h = md.get_md()
-        if not(h.has_key('daap.songgenre')): return False
+        if not(md.has_key('daap.songgenre')): return False
         else:
-            songgenre = h['daap.songgenre'].lower()
+            songgenre = md['daap.songgenre'].lower()
             if type(self.genre) == str:
                 return songgenre == self.genre
             elif type(self.genre) == list:
                 return songgenre in self.genre
+
+class YearRange(Playlist):
+    def __init__(self, name, first,last=None):
+        self.name = name
+        if last == None:
+            last = first
+        self.last = last
+        self.first = first
+
+    def contains(self, md):
+        if not(md.has_key('daap.songyear')): return False
+        else:
+            year = md['daap.songyear']
+            return year >= self.first and year <= self.last
 
 class Recent(Playlist):
      def __init__(self, name, seconds=604800):

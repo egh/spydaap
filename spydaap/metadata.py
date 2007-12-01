@@ -52,6 +52,13 @@ class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
         self.name = None
         self.original_filename = None
         self.daap_raw = None
+        self.md = None
+
+    def __getitem__(self, k):
+        return self.md[k]
+
+    def has_key(self, k):
+        return self.get_md().has_key(k)
 
     def read(self):
         f = open(self.path)
@@ -78,16 +85,17 @@ class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
         return self.daap_raw
 
     def get_md(self):
-        s = StringIO.StringIO(self.get_dmap_raw())
-        l = len(self.get_dmap_raw())
-        data = []
-        while s.tell() != l:
-            d = do()
-            d.processData(s)
-            data.append(d)
-        md = {}
-        for d in data:
-            md[d.codeName()] = d.value
-        return md
+        if self.md == None:
+            self.md = {}
+            s = StringIO.StringIO(self.get_dmap_raw())
+            l = len(self.get_dmap_raw())
+            data = []
+            while s.tell() != l:
+                d = do()
+                d.processData(s)
+                data.append(d)
+            for d in data:
+                self.md[d.codeName()] = d.value
+        return self.md
 
 mdcache = MetadataCache(os.path.join(spydaap.cache_dir, "media"))

@@ -14,8 +14,8 @@ class Mp3Parser(spydaap.parser.Parser):
         }
 
     mp3_int_map = {
-        'TDOR': 'daap.songyear',
         'TBPM': 'daap.songbeatsperminute',
+        'TDRC': 'daap.songyear'
         #'TLEN': 'daap.songtime',
         }
 #do('daap.songdiscnumber', 1),
@@ -27,7 +27,8 @@ class Mp3Parser(spydaap.parser.Parser):
     def add_int_tags(self, mp3, d):
         for k in mp3.tags.keys():
             if self.mp3_int_map.has_key(k):
-                try: d.append(do(mp3_int_map[k], int(str(mp3.tags[k]))))
+                try:
+                    d.append(do(self.mp3_int_map[k], int(str(mp3.tags[k]))))
                 except: pass
 
     file_re = re.compile(".*\\.[mM][pP]3$")
@@ -57,8 +58,8 @@ class Mp3Parser(spydaap.parser.Parser):
                 name = filename
             statinfo = os.stat(filename)
             d.extend([do('daap.songsize', os.path.getsize(filename)),
-                      do('daap.songdateadded', statinfo.st_mtime),
-                      do('daap.songdatemodified', statinfo.st_mtime),
+                      do('daap.songdateadded', statinfo.st_ctime),
+                      do('daap.songdatemodified', statinfo.st_ctime),
                       do('daap.songtime', mp3.info.length * 1000),
                       do('daap.songbitrate', mp3.info.bitrate / 1000),
                       do('daap.songsamplerate', mp3.info.sample_rate),
