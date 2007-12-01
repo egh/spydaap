@@ -10,9 +10,9 @@ class ContainerCache(spydaap.cache.OrderedCache):
         def build_do(md):
             d = do('dmap.listingitem',
                    [ do('dmap.itemkind', 2),
-                     do('dmap.itemid', md.id + 1),
+                     do('dmap.itemid', md.id),
                      do('dmap.itemname', md.get_name()),
-                     do('dmap.containeritemid', md.id + 1)
+                     do('dmap.containeritemid', md.id)
                      ] )
             return d
         pid_list = []

@@ -9,7 +9,7 @@ class Builder:
         def build (md):
             return do('dmap.listingitem', 
                       [ do('dmap.itemkind', 2),
-                        do('dmap.containeritemid', 2),
+                        do('dmap.containeritemid', md.id),
                         do('dmap.itemid', md.id),
                         md.get_dmap_raw()
                         ])
