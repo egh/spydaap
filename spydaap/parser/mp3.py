@@ -23,8 +23,15 @@ class Mp3Parser(spydaap.parser.Parser):
 #        do('daap.songdisccount', 1),
 #        do('daap.songcompilation', False),
 #        do('daap.songuserrating', 1),
-                                                     
-    def add_int_tags(self, mp3, d):
+                
+    def handle_string_tags(self, mp3, d):
+        for k in mp3.tags.keys():
+            if self.mp3_string_map.has_key(k):
+                try:
+                    d.append(do(self.mp3_string_map[k], "/".join([ str(t) for t in mp3.tags[k]])))
+                except: pass
+    
+    def handle_int_tags(self, mp3, d):
         for k in mp3.tags.keys():
             if self.mp3_int_map.has_key(k):
                 try:
@@ -39,6 +46,15 @@ class Mp3Parser(spydaap.parser.Parser):
                 d.append(do('daap.songuserrating', rating))
         except: pass
 
+    def handle_track(self, mp3, d):
+        try:
+            if mp3.tags.has_key('TRCK'):
+                t = str(mp3.tags['TRCK']).split('/')
+                d.append(do('daap.songtracknumber', int(t[0])))
+                if (len(t) == 2):
+                    d.append(do('daap.songtrackcount', int(t[1])))
+        except: pass
+
     file_re = re.compile(".*\\.[mM][pP]3$")
     def understands(self, filename):
         return self.file_re.match(filename)
@@ -47,21 +63,14 @@ class Mp3Parser(spydaap.parser.Parser):
         try:
             mp3 = mutagen.mp3.MP3(filename)
             if mp3.tags != None:
-                d = [ do(self.mp3_string_map[k], str(mp3.tags[k])) 
-                      for k in mp3.tags.keys() 
-                      if self.mp3_string_map.has_key(k) ]
-                self.add_int_tags(mp3, d)
-                self.handle_rating (mp3, d)
-                try:
-                    if mp3.tags.has_key('TRCK'):
-                        t = str(mp3.tags['TRCK']).split('/')
-                        d.append(do('daap.songtracknumber', int(t[0])))
-                        if (len(t) == 2):
-                            d.append(do('daap.songtrackcount', int(t[1])))
-                except: pass
+                d = []
                 if mp3.tags.has_key('TIT2'):
                     name = str(mp3.tags['TIT2'])
                 else: name = filename
+                self.handle_string_tags(mp3, d)
+                self.handle_int_tags(mp3, d)
+                self.handle_rating(mp3, d)
+                self.handle_track(mp3, d)
             else: 
                 d = []
                 name = filename
