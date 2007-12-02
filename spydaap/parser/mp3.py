@@ -33,8 +33,9 @@ class Mp3Parser(spydaap.parser.Parser):
 
     def handle_rating(self, mp3, d):
         try:
-            if mp3.tags.has_key('POPM'):
-                rating = int(mp3.tags['POPM'] * (0.39215686274509803))
+            popm = mp3.tags.getall('POPM')
+            if popm != None:
+                rating = int(popm[0].rating * (0.39215686274509803))
                 d.append(do('daap.songuserrating', rating))
         except: pass
 
