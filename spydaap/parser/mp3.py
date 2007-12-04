@@ -28,7 +28,9 @@ class Mp3Parser(spydaap.parser.Parser):
         for k in mp3.tags.keys():
             if self.mp3_string_map.has_key(k):
                 try:
-                    d.append(do(self.mp3_string_map[k], "/".join([ str(t) for t in mp3.tags[k]])))
+                    tag = [ str(t) for t in mp3.tags[k]]
+                    tag = [ t for t in tag if t != ""]
+                    d.append(do(self.mp3_string_map[k], "/".join(tag)))
                 except: pass
     
     def handle_int_tags(self, mp3, d):
@@ -55,6 +57,15 @@ class Mp3Parser(spydaap.parser.Parser):
                     d.append(do('daap.songtrackcount', int(t[1])))
         except: pass
 
+    def handle_disc(self, mp3, d):
+        try:
+            if mp3.tags.has_key('TPOS'):
+                t = str(mp3.tags['TPOS']).split('/')
+                d.append(do('daap.songdiscnumber', int(t[0])))
+                if (len(t) == 2):
+                    d.append(do('daap.songdisccount', int(t[1])))
+        except: pass
+
     file_re = re.compile(".*\\.[mM][pP]3$")
     def understands(self, filename):
         return self.file_re.match(filename)
@@ -62,8 +73,8 @@ class Mp3Parser(spydaap.parser.Parser):
     def parse(self, filename):
         try:
             mp3 = mutagen.mp3.MP3(filename)
+            d = []
             if mp3.tags != None:
-                d = []
                 if mp3.tags.has_key('TIT2'):
                     name = str(mp3.tags['TIT2'])
                 else: name = filename
@@ -71,8 +82,8 @@ class Mp3Parser(spydaap.parser.Parser):
                 self.handle_int_tags(mp3, d)
                 self.handle_rating(mp3, d)
                 self.handle_track(mp3, d)
+                self.handle_disc(mp3, d)
             else: 
-                d = []
                 name = filename
             statinfo = os.stat(filename)
             d.extend([do('daap.songsize', os.path.getsize(filename)),
