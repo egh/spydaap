@@ -61,8 +61,8 @@ class Recent(Playlist):
 	 self.seconds = seconds
 
      def contains(self, md):
-         f_ctime = os.stat(md.get_original_filename()).st_ctime
-         return ((f_ctime + self.seconds) > time.time())
+         f_mtime = os.stat(md.get_original_filename()).st_mtime
+         return ((f_mtime + self.seconds) > time.time())
 
 class Rating(Playlist):
     def __init__(self, name, rating):
