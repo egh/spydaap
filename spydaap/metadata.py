@@ -15,23 +15,29 @@ class MetadataCache(spydaap.cache.OrderedCache):
     def get_item_by_pid(self, pid, n=None):
         return MetadataCacheItem(self, pid, n)
     
-    def build(self, dir):
+    def build(self, dir, marked={}):
         for path, dirs, files in os.walk(dir):
             for d in dirs:
                 if os.path.islink(os.path.join(path, d)):
-                    self.build(os.path.join(path,d))
+                    self.build(os.path.join(path,d), marked)
             files.sort()
             for fn in files:
                 ffn = os.path.join(path, fn)
-                digest = md5.md5(ffn)
-                md = self.get_item_by_pid(digest.hexdigest())
+                digest = md5.md5(ffn).hexdigest()
+                marked[digest] = True
+                md = self.get_item_by_pid(digest)
                 if (not(md.get_exists()) or \
                         (md.get_mtime() < os.stat(ffn).st_mtime)):
                     for p in self.parsers:
                         if p.understands(ffn):                  
                             (m, name) = p.parse(ffn)
                             if m != None:
-                                MetadataCacheItem.write_entry(self.dir, name, ffn, m)
+                                MetadataCacheItem.write_entry(self.dir,
+                                                              name, ffn, m)
+        for item in os.listdir(self.dir):
+            if not(marked.has_key(item)):
+                print "* %s" % item
+                os.remove(os.path.join (self.dir, item))
         self.build_index()
 
 class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
