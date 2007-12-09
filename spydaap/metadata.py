@@ -36,7 +36,6 @@ class MetadataCache(spydaap.cache.OrderedCache):
                                                               name, ffn, m)
         for item in os.listdir(self.dir):
             if not(marked.has_key(item)):
-                print "* %s" % item
                 os.remove(os.path.join (self.dir, item))
         self.build_index()
 
