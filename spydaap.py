@@ -119,7 +119,7 @@ class database_list(daap_handler):
                            do('dmap.itemname', spydaap.server_name),
                            do('dmap.itemcount', 
                               len(spydaap.metadata.mdcache)),
-                           do('dmap.containercount', 1)])
+                           do('dmap.containercount', len(spydaap.containers.container_cache))])
                       ])
                  ])
         self.h(web,d.encode())
