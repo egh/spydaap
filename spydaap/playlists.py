@@ -3,9 +3,29 @@ import os, time
 class Playlist:
     name = None
     smart_playlist = True
+
     def sort(self, entries):
         pass
 
+    def safe_cmp(self, a, b, key):
+        if a.has_key(key) and b.has_key(key):
+            return cmp(a[key], b[key])
+        elif a.has_key(key):
+            return 1
+        elif b.has_key(key):
+            return -1
+        else: return 0
+
+    def safe_cmp_series(self, a, b, key_list):
+        if len(key_list) == 0:
+            return 0
+        key = key_list[0]
+        r = self.safe_cmp(a, b, key)
+        if r != 0:
+            return r
+        else:
+            return self.safe_cmp_series(a, b, key_list[1:])
+        
 class Library(Playlist):
     def __init__(self):
         self.name = "Library"
@@ -44,17 +64,10 @@ class YearRange(Playlist):
     
     def sort(self, entries):
         def s(a,b):
-            r = cmp(a['daap.songyear'], b['daap.songyear']) 
-            if r != 0:
-                return r
-            else:
-                if a.has_key('daap.songartist') and b.has_key('daap.songartist'):
-                    return cmp(a['daap.songartist'], b['daap.songartist'])
-                elif a.has_key('daap.songartist'):
-                    return 1
-                elif b.has_key('daap.songartist'):
-                    return -1
-                else: return 0
+            return self.safe_cmp_series(a, b, ['daap.songyear', 
+                                               'daap.songartist', 
+                                               'daap.songalbum',
+                                               'daap.songtracknumber'])
         entries.sort(cmp=s)
     
 class Recent(Playlist):
