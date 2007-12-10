@@ -13,7 +13,6 @@ class Cache:
             f = open(fn, 'w')
             func (f)
             f.close()
-        sys.stderr.write(str(fn))
         return open(fn)
 
 class OrderedCache(object):
