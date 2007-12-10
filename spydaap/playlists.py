@@ -2,12 +2,14 @@ import os, time
 
 class Playlist:
     name = None
+    smart_playlist = True
     def sort(self, entries):
         pass
 
 class Library(Playlist):
     def __init__(self):
         self.name = "Library"
+        self.smart_playlist = False
 
     def contains(self, md):
         return True
