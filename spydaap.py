@@ -189,12 +189,15 @@ class container_list(daap_handler):
     def GET(self,database):
         container_do = []
         for i, c in enumerate(spydaap.containers.container_cache):
-            container_do.append(do('dmap.listingitem',
-                                   [ do('dmap.itemid', i + 1 ),
-                                     do('dmap.itemcount', len(c)),
-                                     do('daap.baseplaylist', 1),
-                                     do('dmap.containeritemid', i + 1),
-                                     do('dmap.itemname', c.get_name()) ]))
+            d = [ do('dmap.itemid', i + 1 ),
+                  do('dmap.itemcount', len(c)),
+                  do('dmap.containeritemid', i + 1),
+                  do('dmap.itemname', c.get_name()) ]
+            if c.get_name() == 'Library': # this should be better
+                d.append(do('daap.baseplaylist', 1))
+            else:
+                d.append(do('com.apple.itunes.smart-playlist', 1))
+            container_do.append(do('dmap.listingitem', d))
         d = do('daap.databaseplaylists',
                [ do('dmap.status', 200),
                  do('dmap.updatetype', 0),

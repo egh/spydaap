@@ -24,7 +24,6 @@ class ContainerCache(spydaap.cache.OrderedCache):
                      do('dmap.updatetype', 0),
                      do('dmap.specifiedtotalcount', len(entries)),
                      do('dmap.returnedcount', len(entries)),
-                     do('com.apple.itunes.smart-playlist', 1),
                      do('dmap.listing',
                         [ build_do (md,id) for (id, md) in enumerate(entries) ])
                      ])
