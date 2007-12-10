@@ -117,7 +117,8 @@ class database_list(daap_handler):
                          [ do('dmap.itemid', 1),
                            do('dmap.persistentid', 1),
                            do('dmap.itemname', spydaap.server_name),
-                           do('dmap.itemcount', 12),
+                           do('dmap.itemcount', 
+                              len(spydaap.metadata.mdcache)),
                            do('dmap.containercount', 1)])
                       ])
                  ])
@@ -190,6 +191,8 @@ class container_list(daap_handler):
         for i, c in enumerate(spydaap.containers.container_cache):
             container_do.append(do('dmap.listingitem',
                                    [ do('dmap.itemid', i + 1 ),
+                                     do('dmap.itemcount', len(c)),
+                                     do('daap.baseplaylist', 1),
                                      do('dmap.containeritemid', i + 1),
                                      do('dmap.itemname', c.get_name()) ]))
         d = do('daap.databaseplaylists',
