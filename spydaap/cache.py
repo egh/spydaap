@@ -15,6 +15,12 @@ class Cache:
             f.close()
         return open(fn)
 
+    def clean(self):
+        for f in os.listdir(self.dir):
+            p = os.path.join(self.dir, f)
+            if os.path.isfile(p):
+                os.remove(p)
+
 class OrderedCache(object):
     class Iter:
         def __init__(self, cache):
@@ -49,17 +55,22 @@ class OrderedCache(object):
         return os.path.getsize(os.path.join(self.dir, 'index')) / 32
 
     def build_index(self, pid_list=None):
+        index_fn = os.path.join(self.dir, 'index')
+        if os.path.exists(index_fn):
+            os.remove(index_fn)
         if pid_list == None:
             pid_list = [ f for f in os.listdir(self.dir) if f != "index"]
             pid_list.sort()
-        fi = open(os.path.join(self.dir, 'index'), 'w')
+        fi = open(index_fn, 'w')
         for pid in pid_list:
             fi.write(pid)
         fi.close()
 
     def clean(self):
         for f in os.listdir(self.dir):
-            os.remove(os.path.join(self.dir, f))
+            p = os.path.join(self.dir, f)
+            if os.path.isfile(p):
+                os.remove(p)
         
 class OrderedCacheItem(object):
     def __init__(self, cache, pid, id):
@@ -79,5 +90,3 @@ class OrderedCacheItem(object):
     
     def get_pid(self):
         return self.pid    
-
-cache = Cache(spydaap.cache_dir)

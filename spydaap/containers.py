@@ -6,7 +6,7 @@ class ContainerCache(spydaap.cache.OrderedCache):
     def get_item_by_pid(self, pid, n=None):
         return ContainerCacheItem(self, pid, None)
 
-    def build(self):
+    def build(self, md_cache):
         def build_do(md, id):
             d = do('dmap.listingitem',
                    [ do('dmap.itemkind', 2),
@@ -17,7 +17,7 @@ class ContainerCache(spydaap.cache.OrderedCache):
             return d
         pid_list = []
         for pl in spydaap.container_list:
-            entries = [n for n in spydaap.metadata.mdcache if pl.contains(n)]
+            entries = [n for n in md_cache if pl.contains(n)]
             pl.sort(entries)
             d = do('daap.playlistsongs',
                    [ do('dmap.status', 200),
@@ -70,6 +70,4 @@ class ContainerCacheItem(spydaap.cache.OrderedCacheItem):
         if self._len == None:
             self.read()
         return self._len
-
-container_cache = ContainerCache(os.path.join(spydaap.cache_dir, "containers"))
 

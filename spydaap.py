@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-import web, sys, os, struct, re, select, spydaap.daap, pybonjour
+import web, sys, os, struct, re, select, pybonjour, signal
+import spydaap.daap, spydaap.metadata, spydaap.database, spydaap.containers, spydaap.cache
 from spydaap.daap import do
-from spydaap.cache import cache
-import spydaap.metadata, spydaap.database, spydaap.containers
 import config
 
 #itunes sends request for:
 #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
 #so we must hack the urls; annoying.
+
 
 itunes_re = '(?://[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}:[0-9]+)?'
 drop_q = '(?:\\?.*)?'
@@ -35,6 +35,10 @@ urls = (
     '/update',
     'update', #
     )
+
+cache = spydaap.cache.Cache(spydaap.cache_dir)
+md_cache = spydaap.metadata.MetadataCache(os.path.join(spydaap.cache_dir, "media"))
+container_cache = spydaap.containers.ContainerCache(os.path.join(spydaap.cache_dir, "containers"))
 
 class daap_handler:
     def h(self,web,data):
@@ -118,15 +122,33 @@ class database_list(daap_handler):
                            do('dmap.persistentid', 1),
                            do('dmap.itemname', spydaap.server_name),
                            do('dmap.itemcount', 
-                              len(spydaap.metadata.mdcache)),
-                           do('dmap.containercount', len(spydaap.containers.container_cache))])
+                              len(md_cache)),
+                           do('dmap.containercount', len(container_cache))])
                       ])
                  ])
         self.h(web,d.encode())
 
 class item_list(daap_handler):
     def GET(self,database_id):
-        return self.h(web, cache.get('item_list', spydaap.database.builder.build_list))
+        def build_item(md):
+            return do('dmap.listingitem', 
+                      [ do('dmap.itemkind', 2),
+                        do('dmap.containeritemid', md.id),
+                        do('dmap.itemid', md.id),
+                        md.get_dmap_raw()
+                        ])
+        def build(f):
+            children = [ build_item (md) for md in md_cache ]
+            file_count = len(children)
+            d = do('daap.databasesongs',
+                   [ do('dmap.status', 200),
+                     do('dmap.updatetype', 0),
+                     do('dmap.specifiedtotalcount', file_count),
+                     do('dmap.returnedcount', file_count),
+                     do('dmap.listing',
+                        children) ])
+            f.write(d.encode())
+        return self.h(web, cache.get('item_list', build))
 
 server_revision = 1
 
@@ -168,7 +190,7 @@ class ContentRangeFile:
 
 class item(daap_handler):
     def GET(self,database,item,format):
-        fn = spydaap.metadata.mdcache.get_item_by_id(item).get_original_filename()
+        fn = md_cache.get_item_by_id(item).get_original_filename()
         if (web.ctx.environ.has_key('HTTP_RANGE')):
             rs = web.ctx.environ['HTTP_RANGE']
             m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
@@ -188,7 +210,7 @@ class item(daap_handler):
 class container_list(daap_handler):
     def GET(self,database):
         container_do = []
-        for i, c in enumerate(spydaap.containers.container_cache):
+        for i, c in enumerate(container_cache):
             d = [ do('dmap.itemid', i + 1 ),
                   do('dmap.itemcount', len(c)),
                   do('dmap.containeritemid', i + 1),
@@ -210,12 +232,17 @@ class container_list(daap_handler):
 
 class container_item_list(daap_handler):
     def GET(self, database_id, container_id):
-        container = spydaap.containers.container_cache.get_item_by_id(container_id)
+        container = container_cache.get_item_by_id(container_id)
         return self.h(web, container.get_daap_raw())
 
-spydaap.metadata.mdcache.build(spydaap.media_path)
-spydaap.containers.container_cache.clean()
-spydaap.containers.container_cache.build()
+def rebuild_cache(signum=None, frame=None):
+    md_cache.build(spydaap.media_path)
+    container_cache.clean()
+    container_cache.build(md_cache)
+    cache.clean()
+
+rebuild_cache()
+signal.signal(signal.SIGHUP, rebuild_cache)
 
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     pass

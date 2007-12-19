@@ -1,4 +1,4 @@
-import os, struct, md5, spydaap.parser, types, spydaap, StringIO
+import os, struct, md5, spydaap.parser, types, spydaap, spydaap.cache, StringIO
 import config
 from spydaap.daap import do
 
@@ -102,5 +102,3 @@ class MetadataCacheItem(spydaap.cache.OrderedCacheItem):
             for d in data:
                 self.md[d.codeName()] = d.value
         return self.md
-
-mdcache = MetadataCache(os.path.join(spydaap.cache_dir, "media"))
