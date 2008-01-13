@@ -247,10 +247,22 @@ signal.signal(signal.SIGHUP, rebuild_cache)
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     pass
 
+#records as in mt-daapd
+myTxtRecord=pybonjour.TXTRecord()
+myTxtRecord['txtvers'] = '1'
+myTxtRecord['iTSh Version'] = '131073'
+myTxtRecord['Machine Name'] = spydaap.server_name
+myTxtRecord['Password'] = 'false'
+#myTxtRecord['Database ID'] = ''
+#myTxtRecord['Version'] = ''
+#myTxtRecord['Machine ID'] = ''
+#myTxtRecord['ffid'] = ''
+
 sdRef = pybonjour.DNSServiceRegister(name = spydaap.server_name,
                                      regtype = "_daap._tcp",
                                      port = spydaap.port,
-                                     callBack = register_callback)
+                                     callBack = register_callback,
+                                     txtRecord=myTxtRecord)
 
 while True:
     ready = select.select([sdRef], [], [])
