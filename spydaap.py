@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import web, sys, os, struct, re, select, pybonjour, signal
-import spydaap.daap, spydaap.metadata, spydaap.database, spydaap.containers, spydaap.cache
+import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache
 from spydaap.daap import do
 import config
 
@@ -41,8 +41,8 @@ md_cache = spydaap.metadata.MetadataCache(os.path.join(spydaap.cache_dir, "media
 container_cache = spydaap.containers.ContainerCache(os.path.join(spydaap.cache_dir, "containers"))
 
 class daap_handler:
-    def h(self,web,data):
-        web.header('Content-Type', 'application/x-dmap-tagged')
+    def h(self,web,data,type='application/x-dmap-tagged'):
+        web.header('Content-Type', type)
         web.header('DAAP-Server', 'Simple')
         web.header('Expires', '-1')
         web.header('Cache-Control', 'no-cache')
@@ -205,7 +205,7 @@ class item(daap_handler):
                        + str(end) + "/"
                        + str(os.stat(fn).st_size))
         else: f = open(fn)
-        return self.h(web, f)
+        return self.h(web, f, 'audio/*')
 
 class container_list(daap_handler):
     def GET(self,database):
