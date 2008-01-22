@@ -178,7 +178,7 @@ class DAAPObject(object):
     def processData(self, str):
         # read 4 bytes for the code and 4 bytes for the length of the objects data
         data = str.read(8)
-        #print("'%s'"%data)
+
         if not data: return
         self.code, self.length = struct.unpack('!4sI', data)
 
@@ -188,9 +188,8 @@ class DAAPObject(object):
         else:
             self.type = dmapCodeTypes[self.code][1]
 
-        start_pos = str.tell()
-
         if self.type == 'c':
+            start_pos = str.tell()
             self.contains = []
             # the object is a container, we need to pass it
             # it's length amount of data for processessing
@@ -199,9 +198,7 @@ class DAAPObject(object):
                 object  = DAAPObject()
                 self.contains.append(object)
                 object.processData(str)
-
             return
-
 
         # not a container, we're a single atom. Read it.
         code = str.read(self.length)
