@@ -142,7 +142,6 @@ dmapCodeTypes = {
     }
 
 dmapDataTypes = {
-    # these are the data types
     1:'b',  # byte
     2:'ub', # unsigned byte
     3:'h',  # short
