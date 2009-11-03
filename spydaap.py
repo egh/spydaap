@@ -14,10 +14,11 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import web, sys, os, struct, re, select, pybonjour, signal
+import web, sys, os, struct, re, select, signal
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache
 from spydaap.daap import do
 import config
+import pybonjour
 
 #itunes sends request for:
 #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
@@ -72,7 +73,8 @@ class daap_handler:
             try:
                 web.header("Content-Length", str(len(data)))
             except: pass
-            sys.stdout.write(data)
+            #sys.stdout.write(data)
+            return data
 
 session_id = 1
 class login(daap_handler):
@@ -122,7 +124,7 @@ class content_codes(daap_handler):
             children.append(d)
         mccr = do('dmap.contentcodesresponse',
                   children)
-        self.h(web, mccr.encode())
+        return self.h(web, mccr.encode())
 
 class database_list(daap_handler):
     def GET(self):
@@ -141,7 +143,7 @@ class database_list(daap_handler):
                            do('dmap.containercount', len(container_cache))])
                       ])
                  ])
-        self.h(web,d.encode())
+        return self.h(web,d.encode())
 
 class item_list(daap_handler):
     def GET(self,database_id):
@@ -243,7 +245,7 @@ class container_list(daap_handler):
                  do('dmap.listing',
                     container_do)
                  ])
-        self.h(web, d.encode())
+        return self.h(web, d.encode())
 
 class container_item_list(daap_handler):
     def GET(self, database_id, container_id):
@@ -290,5 +292,7 @@ sys.argv.append(str(spydaap.port))
 
 web.webapi.internalerror = web.debugerror
 #if __name__ == "__main__": web.run(urls, globals())
-web.wsgi.runwsgi(web.webapi.wsgifunc(web.webpyfunc(urls, globals())))
+#web.wsgi.runwsgi(web.webapi.wsgifunc(web.webpyfunc(urls, globals())))
+app = web.application(urls, globals())
+app.run()
 sdRef.close()
