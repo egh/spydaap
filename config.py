@@ -1,5 +1,5 @@
 import spydaap
-from spydaap.parser import mp3
+from spydaap.parser import mp3, ogg
 
 #to process .mov files
 #from spydaap.parser import mp3,mov

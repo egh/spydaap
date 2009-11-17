@@ -85,12 +85,17 @@ class daap_handler:
         if (hasattr(data, 'next')):
             try:
                 web.header("Content-Length", str(os.stat(data.name).st_size))
-            except: pass
+            except: 
+                try:    # For Content Range Files (makes oggs seekable)
+                    web.header("Content-Length", str(data.end-data.start))
+                except:
+                    log.warning('No content length.')
             return data
         else:
             try:
                 web.header("Content-Length", str(len(data)))
-            except: pass
+            except: 
+                log.warning('No content length.')
             #sys.stdout.write(data)
             return data
 
@@ -240,7 +245,7 @@ class item(daap_handler):
                        + str(end) + "/"
                        + str(os.stat(fn).st_size))
         else: f = open(fn)
-        return self.h(web, f, 'audio/*')
+        return self.h(web, f, 'audio/%s' % fn[-3:])
 
 class container_list(daap_handler):
     def GET(self,database):
