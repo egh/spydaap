@@ -14,10 +14,13 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import web, sys, os, struct, re, select, signal
+import web, sys, os, struct, re, select, signal, logging
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache
 from spydaap.daap import do
 import config
+
+logging.basicConfig()
+log = logging.getLogger('daap')
 
 try:
     import pybonjour
@@ -25,14 +28,14 @@ try:
     print 'pybonjour detected.'
 except:
     bonjour = False
-    print 'pybonjour not found, trying python-avahi.'
+    log.warning('pybonjour not found, trying python-avahi.')
     try:
         from ZeroconfService import ZeroconfService
         avahi = True
-        print 'python-avahi detected.'
+        log.info('python-avahi detected.')
     except:
         avahi = False
-        print 'python-avahi not found, you need pybonjour or python-avahi+python-dbus to get Zeroconf Service Publishing.'
+        log.error('python-avahi not found, you need pybonjour or python-avahi+python-dbus to get Zeroconf Service Publishing.')
 
 
 #itunes sends request for:
