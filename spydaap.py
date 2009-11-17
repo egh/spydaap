@@ -18,7 +18,22 @@ import web, sys, os, struct, re, select, signal
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache
 from spydaap.daap import do
 import config
-import pybonjour
+
+try:
+    import pybonjour
+    bonjour = True
+    print 'pybonjour detected.'
+except:
+    bonjour = False
+    print 'pybonjour not found, trying python-avahi.'
+    try:
+        from ZeroconfService import ZeroconfService
+        avahi = True
+        print 'python-avahi detected.'
+    except:
+        avahi = False
+        print 'python-avahi not found, you need pybonjour or python-avahi+python-dbus to get Zeroconf Service Publishing.'
+
 
 #itunes sends request for:
 #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
@@ -264,28 +279,35 @@ signal.signal(signal.SIGHUP, rebuild_cache)
 def register_callback(sdRef, flags, errorCode, name, regtype, domain):
     pass
 
-#records as in mt-daapd
-myTxtRecord=pybonjour.TXTRecord()
-myTxtRecord['txtvers'] = '1'
-myTxtRecord['iTSh Version'] = '131073'
-myTxtRecord['Machine Name'] = spydaap.server_name
-myTxtRecord['Password'] = 'false'
-#myTxtRecord['Database ID'] = ''
-#myTxtRecord['Version'] = ''
-#myTxtRecord['Machine ID'] = ''
-#myTxtRecord['ffid'] = ''
-
-sdRef = pybonjour.DNSServiceRegister(name = spydaap.server_name,
+if bonjour:
+    #records as in mt-daapd
+    myTxtRecord=pybonjour.TXTRecord()
+    myTxtRecord['txtvers'] = '1'
+    myTxtRecord['iTSh Version'] = '131073'
+    myTxtRecord['Machine Name'] = spydaap.server_name
+    myTxtRecord['Password'] = 'false'
+    #myTxtRecord['Database ID'] = ''
+    #myTxtRecord['Version'] = ''
+    #myTxtRecord['Machine ID'] = ''
+    #myTxtRecord['ffid'] = ''
+    
+    sdRef = pybonjour.DNSServiceRegister(name = spydaap.server_name,
                                      regtype = "_daap._tcp",
                                      port = spydaap.port,
                                      callBack = register_callback,
                                      txtRecord=myTxtRecord)
 
-while True:
-    ready = select.select([sdRef], [], [])
-    if sdRef in ready[0]:
-        pybonjour.DNSServiceProcessResult(sdRef)
-        break
+    while True:
+        ready = select.select([sdRef], [], [])
+        if sdRef in ready[0]:
+            pybonjour.DNSServiceProcessResult(sdRef)
+            break
+
+elif avahi:
+    service = ZeroconfService(name=spydaap.server_name,
+                                      port=spydaap.port,  stype="_daap._tcp")
+
+    service.publish()
 
 #hacky; there is a better way
 sys.argv.append(str(spydaap.port))
@@ -295,4 +317,9 @@ web.webapi.internalerror = web.debugerror
 #web.wsgi.runwsgi(web.webapi.wsgifunc(web.webpyfunc(urls, globals())))
 app = web.application(urls, globals())
 app.run()
-sdRef.close()
+
+
+if bonjour:
+    sdRef.close()
+elif avahi:
+    service.unpublish()
