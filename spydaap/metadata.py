@@ -13,7 +13,12 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import os, struct, md5, spydaap.cache, StringIO
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import md5
+
+import os, struct, spydaap.cache, StringIO
 from spydaap.daap import do
 
 class MetadataCache(spydaap.cache.OrderedCache):
