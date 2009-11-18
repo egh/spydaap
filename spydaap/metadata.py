@@ -13,19 +13,13 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import os, struct, md5, spydaap.parser, types, spydaap, spydaap.cache, StringIO
-import config
+import os, struct, md5, spydaap.cache, StringIO
 from spydaap.daap import do
 
 class MetadataCache(spydaap.cache.OrderedCache):
-    parsers = []
-    for ms in dir(spydaap.parser):
-        m = spydaap.parser.__dict__[ms]
-        if type(m) == types.ModuleType:
-            for cs in dir(m):
-                c = m.__dict__[cs]
-                if type(c) == types.ClassType:
-                    parsers.append(c())
+    def __init__(self, cache_dir, parsers):
+        self.parsers = parsers
+        super(MetadataCache, self).__init__(cache_dir)
 
     def get_item_by_pid(self, pid, n=None):
         return MetadataCacheItem(self, pid, n)
@@ -35,7 +29,6 @@ class MetadataCache(spydaap.cache.OrderedCache):
             for d in dirs:
                 if os.path.islink(os.path.join(path, d)):
                     self.build(os.path.join(path,d), marked, True)
-            #files.sort()
             for fn in files:
                 ffn = os.path.join(path, fn)
                 digest = md5.md5(ffn).hexdigest()
