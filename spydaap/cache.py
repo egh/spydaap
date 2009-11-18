@@ -13,9 +13,9 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import md5, os, sys, spydaap
+import md5, os, sys
 
-class Cache:
+class Cache(object):
     def __init__(self, dir):
         self.dir = dir
         if (not(os.path.exists(self.dir))):
