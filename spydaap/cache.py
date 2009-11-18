@@ -17,7 +17,7 @@ import md5, os, sys
 
 class Cache(object):
     def __init__(self, dir):
-        self.dir = dir
+        self.dir = os.path.abspath(dir)
         if (not(os.path.exists(self.dir))):
             os.mkdir(self.dir)
     
@@ -52,7 +52,7 @@ class OrderedCache(object):
             return self.cache.get_item_by_id(self.n)
 
     def __init__(self, dir):
-        self.dir = dir
+        self.dir = os.path.abspath(dir)
         if (not(os.path.exists(self.dir))):
             os.mkdir(self.dir)
         
