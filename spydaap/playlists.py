@@ -15,7 +15,7 @@
 
 import os, time
 
-class Playlist:
+class Playlist(object):
     name = None
     smart_playlist = True
 
