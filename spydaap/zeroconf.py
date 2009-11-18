@@ -55,23 +55,22 @@ class Zeroconf(object):
 
     class Avahi(Helper):
         def publish(self):
-            import dbus
+            import dbus, avahi
             bus = dbus.SystemBus()
             server = dbus.Interface(
-                             bus.get_object(
-                                     avahi.DBUS_NAME,
-                                     avahi.DBUS_PATH_SERVER),
-                            avahi.DBUS_INTERFACE_SERVER)
+                bus.get_object(
+                    avahi.DBUS_NAME,
+                    avahi.DBUS_PATH_SERVER),
+                avahi.DBUS_INTERFACE_SERVER)
 
             g = dbus.Interface(
-                        bus.get_object(avahi.DBUS_NAME,
-                                       server.EntryGroupNew()),
-                        avahi.DBUS_INTERFACE_ENTRY_GROUP)
-
+                bus.get_object(avahi.DBUS_NAME,
+                               server.EntryGroupNew()),
+                avahi.DBUS_INTERFACE_ENTRY_GROUP)
+            
             g.AddService(avahi.IF_UNSPEC, avahi.PROTO_UNSPEC,dbus.UInt32(0),
                          self.name, self.stype, self.domain, self.host,
                          dbus.UInt16(self.port), self.text)
-
             g.Commit()
             self.group = g
 
