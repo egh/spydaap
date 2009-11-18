@@ -99,7 +99,8 @@ class Mp3Parser(spydaap.parser.Parser):
                 self.handle_track(mp3, d)
                 self.handle_disc(mp3, d)
             else: 
-                name = filename
+                name = os.path.basename(filename)
+                d.extend([do('dmap.itemname', name)])
             statinfo = os.stat(filename)
             d.extend([do('daap.songsize', os.path.getsize(filename)),
                       do('daap.songdateadded', statinfo.st_ctime),
