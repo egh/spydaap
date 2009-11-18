@@ -13,11 +13,14 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import spydaap, os, struct, md5
+import os, struct, md5, spydaap.cache
 from spydaap.daap import do
-import config
 
 class ContainerCache(spydaap.cache.OrderedCache):
+    def __init__(self, cache_dir, container_list):
+        self.container_list = container_list
+        super(ContainerCache, self).__init__(cache_dir)
+
     def get_item_by_pid(self, pid, n=None):
         return ContainerCacheItem(self, pid, None)
 
@@ -31,7 +34,7 @@ class ContainerCache(spydaap.cache.OrderedCache):
                      ] )
             return d
         pid_list = []
-        for pl in spydaap.container_list:
+        for pl in self.container_list:
             entries = [n for n in md_cache if pl.contains(n)]
             pl.sort(entries)
             d = do('daap.playlistsongs',
