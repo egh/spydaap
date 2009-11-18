@@ -59,6 +59,8 @@ def usage():
     sys.stderr.write("  -u, --user=username     specify username to run as\n")
 
 def mainloop():
+    rebuild_cache()
+
     zeroconf = spydaap.zeroconf.Zeroconf(spydaap.server_name,
                                          spydaap.port,  
                                          stype="_daap._tcp")
@@ -107,8 +109,6 @@ def main():
         sys.stderr.write(str(err))
         usage()
         sys.exit(2)
-
-    rebuild_cache()
 
     signal.signal(signal.SIGHUP, rebuild_cache)
     #signal.signal(signal.SIGTERM, shutdown)
