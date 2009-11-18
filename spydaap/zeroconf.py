@@ -55,6 +55,7 @@ class Zeroconf(object):
 
     class Avahi(Helper):
         def publish(self):
+            import dbus
             bus = dbus.SystemBus()
             server = dbus.Interface(
                              bus.get_object(
