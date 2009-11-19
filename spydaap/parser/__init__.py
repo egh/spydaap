@@ -13,5 +13,34 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+from spydaap.daap import do
+
 class Parser:
-    pass
+    def handle_string_tags(self, map, md, daap):
+        for k in md.tags.keys():
+            if map.has_key(k):
+                try:
+                    tag = [ str(t) for t in md.tags[k]]
+                    tag = [ t for t in tag if t != ""]
+                    daap.append(do(map[k], "/".join(tag)))
+                except: pass
+
+    def handle_int_tags(self, map, md, daap):
+        for k in md.tags.keys():
+            if map.has_key(k):
+                try:
+                    daap.append(do(map[k], int(str(md.tags[k]))))
+                except: pass
+
+    def add_file_info(self, filename, daap):
+        statinfo = os.stat(filename)
+        daap.extend([do('daap.songsize', os.path.getsize(filename)),
+                     do('daap.songdateadded', statinfo.st_ctime),
+                     do('daap.songdatemodified', statinfo.st_ctime)])
+    
+    def set_itemname_if_unset(self, name, daap):
+        for d in daap:
+            if d.code == 'minm': return d.value
+        daap.extend([do('minm', name)])
+        return name

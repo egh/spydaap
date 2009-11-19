@@ -16,12 +16,11 @@
 import spydaap.parser.vorbis, re
 from spydaap.daap import do
 
-class OggParser(spydaap.parser.vorbis.VorbisParser):
-    file_re = re.compile(".*\\.[oO][gG][gG]$")
+class FlacParser(spydaap.parser.vorbis.VorbisParser):
+    file_re = re.compile(".*\\.[fF][lL][aA][cC]$")
     def understands(self, filename):
         return self.file_re.match(filename)
 
     def parse_extra_vorbis(self, filename, md, daap):
-        daap.extend([do('daap.songbitrate', md.info.bitrate / 1000),
-                     do('daap.songformat', 'ogg'),
-                     do('daap.songdescription', 'Ogg/Vorbis Audio File')])
+        daap.extend([do('daap.songformat', 'flac'),
+                     do('daap.songdescription', 'FLAC Audio File')])

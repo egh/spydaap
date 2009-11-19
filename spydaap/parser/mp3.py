@@ -39,22 +39,6 @@ class Mp3Parser(spydaap.parser.Parser):
 #        do('daap.songcompilation', False),
 #        do('daap.songuserrating', 1),
                 
-    def handle_string_tags(self, mp3, d):
-        for k in mp3.tags.keys():
-            if self.mp3_string_map.has_key(k):
-                try:
-                    tag = [ str(t) for t in mp3.tags[k]]
-                    tag = [ t for t in tag if t != ""]
-                    d.append(do(self.mp3_string_map[k], "/".join(tag)))
-                except: pass
-    
-    def handle_int_tags(self, mp3, d):
-        for k in mp3.tags.keys():
-            if self.mp3_int_map.has_key(k):
-                try:
-                    d.append(do(self.mp3_int_map[k], int(str(mp3.tags[k]))))
-                except: pass
-
     def handle_rating(self, mp3, d):
         try:
             popm = mp3.tags.getall('POPM')
@@ -90,27 +74,19 @@ class Mp3Parser(spydaap.parser.Parser):
             mp3 = mutagen.mp3.MP3(filename)
             d = []
             if mp3.tags != None:
-                if mp3.tags.has_key('TIT2'):
-                    name = str(mp3.tags['TIT2'])
-                else: name = filename
-                self.handle_string_tags(mp3, d)
-                self.handle_int_tags(mp3, d)
+                self.handle_string_tags(self.mp3_string_map, mp3, d)
+                self.handle_int_tags(self.mp3_int_map, mp3, d)
                 self.handle_rating(mp3, d)
                 self.handle_track(mp3, d)
                 self.handle_disc(mp3, d)
-            else: 
-                name = os.path.basename(filename)
-                d.extend([do('dmap.itemname', name)])
-            statinfo = os.stat(filename)
-            d.extend([do('daap.songsize', os.path.getsize(filename)),
-                      do('daap.songdateadded', statinfo.st_ctime),
-                      do('daap.songdatemodified', statinfo.st_ctime),
-                      do('daap.songtime', mp3.info.length * 1000),
+            self.add_file_info(filename, d)
+            d.extend([do('daap.songtime', mp3.info.length * 1000),
                       do('daap.songbitrate', mp3.info.bitrate / 1000),
                       do('daap.songsamplerate', mp3.info.sample_rate),
                       do('daap.songformat', 'mp3'),
                       do('daap.songdescription', 'MPEG Audio File'),
                       ])
+            name = self.set_itemname_if_unset(os.path.basename(filename), d)
             return (d, name)
         except Exception, e:
             sys.stderr.write("Caught exception: while processing %s: %s " % (filename, str(e)) )
