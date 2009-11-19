@@ -48,9 +48,6 @@ class Zeroconf(object):
                     break
 
         def unpublish(self):
-            pass
-
-        def close(self):
             self.sdRef.close()
 
     class Avahi(Helper):
@@ -63,23 +60,18 @@ class Zeroconf(object):
                     avahi.DBUS_PATH_SERVER),
                 avahi.DBUS_INTERFACE_SERVER)
 
-            g = dbus.Interface(
+            self.group = dbus.Interface(
                 bus.get_object(avahi.DBUS_NAME,
                                server.EntryGroupNew()),
                 avahi.DBUS_INTERFACE_ENTRY_GROUP)
             
-            g.AddService(avahi.IF_UNSPEC, avahi.PROTO_UNSPEC,dbus.UInt32(0),
+            self.group.AddService(avahi.IF_UNSPEC, avahi.PROTO_UNSPEC,dbus.UInt32(0),
                          self.name, self.stype, self.domain, self.host,
                          dbus.UInt16(self.port), self.text)
-            g.Commit()
-            self.group = g
+            self.group.Commit()
 
         def unpublish(self):
             self.group.Reset()
-
-        def close(self):
-            self.service.unpublish()
-
 
     def __init__(self, *args, **kwargs):
         try:
@@ -94,10 +86,6 @@ class Zeroconf(object):
                 traceback.print_exc(file=sys.stdout)
                 self.helper = None
                 
-    def close(self):
-        if self.helper != None:
-            self.helper.close()
-
     def publish(self):
         if self.helper != None:
             self.helper.publish()

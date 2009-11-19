@@ -94,7 +94,7 @@ def really_main():
     except KeyboardInterrupt:
         httpd.force_stop()
     log.warn("Shutting down.")
-    zeroconf.close()
+    zeroconf.unpublish()
 
 def main():
     daemonize = True
