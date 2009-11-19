@@ -142,7 +142,7 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
                 children.append(d)
             mccr = do('dmap.contentcodesresponse',
                       children)
-            self.h(web, mccr.encode())
+            self.h(mccr.encode())
 
         def do_GET_database_list(self):
             d = do('daap.serverdatabases',
