@@ -13,12 +13,12 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import playlists
+import os, playlists
 
 server_name = "spydaap"
 port = 3689
-media_path = "media"
-cache_dir = "cache"
+media_path = os.path.abspath("media")
+cache_dir = os.path.abspath("cache")
 container_list = [playlists.Library()]
 
 class ContentRangeFile(object):
