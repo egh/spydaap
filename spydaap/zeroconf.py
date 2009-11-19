@@ -35,23 +35,23 @@ class Zeroconf(object):
             def register_callback(sdRef, flags, errorCode, name, regtype, domain):
                 pass
 
-            sdRef = pybonjour.DNSServiceRegister(name = self.name,
-                                                 regtype = "_daap._tcp",
-                                                 port = self.port,
-                                                 callBack = register_callback,
-                                                 txtRecord=txtRecord)
+            self.sdRef = pybonjour.DNSServiceRegister(name = self.name,
+                                                      regtype = "_daap._tcp",
+                                                      port = self.port,
+                                                      callBack = register_callback,
+                                                      txtRecord=txtRecord)
             
             while True:
-                ready = select.select([sdRef], [], [])
-                if sdRef in ready[0]:
-                    pybonjour.DNSServiceProcessResult(sdRef)
+                ready = select.select([self.sdRef], [], [])
+                if self.sdRef in ready[0]:
+                    pybonjour.DNSServiceProcessResult(self.sdRef)
                     break
 
         def unpublish(self):
             pass
 
         def close(self):
-            sdRef.close()
+            self.sdRef.close()
 
     class Avahi(Helper):
         def publish(self):
