@@ -13,7 +13,7 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import BaseHTTPServer, logging, os, re, urlparse, spydaap, sys, traceback
+import BaseHTTPServer, errno, logging, os, re, urlparse, socket, spydaap, sys, traceback
 from spydaap.daap import do
 
 def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
@@ -42,7 +42,11 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
                     traceback.print_exc(file=sys.stdout)
                 self.end_headers()
                 for d in data:
-                    self.wfile.write(d)
+                    try:
+                        self.wfile.write(d)
+                    except socket.error, ex:
+                        if ex.errno in [errno.ECONNRESET]: return
+                        else: raise
             else:
                 try:
                     self.send_header("Content-Length", str(len(data)))
@@ -50,7 +54,11 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
                     traceback.print_exc(file=sys.stdout)
                     log.warning('No content length.')
                 self.end_headers()
-                self.wfile.write(data)
+                try:
+                    self.wfile.write(data)
+                except socket.error, ex:
+                    if ex.errno in [errno.ECONNRESET]: return
+                    else: raise
 
         #itunes sends request for:
         #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
