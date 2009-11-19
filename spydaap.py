@@ -14,7 +14,7 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import BaseHTTPServer, SocketServer, getopt, grp, os, pwd, signal, sys, logging
+import BaseHTTPServer, SocketServer, getopt, grp, httplib, logging, os, pwd, select, signal, spydaap, sys
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache, spydaap.server, spydaap.zeroconf
 from spydaap.daap import do
 import config
@@ -37,17 +37,27 @@ class Log:
         self.f.write(s)
         self.f.flush()
 
+class MyThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+    """Handle requests in a separate thread."""
+    timeout = 1
+
+    def __init__(self, *args):
+        BaseHTTPServer.HTTPServer.__init__(self,*args)
+        self.keep_running = True
+
+    def serve_forever(self):
+        while self.keep_running:
+            self.handle_request()
+
+    def force_stop(self):
+        self.keep_running = False
+        self.server_close()
+
 def rebuild_cache(signum=None, frame=None):
-    md_cache.build(spydaap.media_path)
+    md_cache.build(os.path.abspath(spydaap.media_path))
     container_cache.clean()
     container_cache.build(md_cache)
     cache.clean()
-
-def shutdown(signum, frame):
-    keep_running = False
-
-class MyThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
-    """Handle requests in a separate thread."""
 
 def usage():
     sys.stderr.write("Usage: %s [OPTION]\n"%(sys.argv[0]))
@@ -58,26 +68,32 @@ def usage():
     sys.stderr.write("  -p, --pidfile=file      use .pid file (default is ./spydaap.pid\n")
     sys.stderr.write("  -u, --user=username     specify username to run as\n")
 
-def mainloop():
-    rebuild_cache()
+def make_shutdown(httpd):
+    def _shutdown(signum, frame): 
+        httpd.force_stop() 
+    return _shutdown
 
+def really_main():
+    rebuild_cache()
     zeroconf = spydaap.zeroconf.Zeroconf(spydaap.server_name,
                                          spydaap.port,  
                                          stype="_daap._tcp")
     zeroconf.publish()
-
-    #try:
-    log.warning("Listening.")
+    log.warn("Listening.")
     httpd = MyThreadedHTTPServer(('0.0.0.0', spydaap.port), 
                                  spydaap.server.makeDAAPHandlerClass(spydaap.server_name, cache, md_cache, container_cache))
-    while keep_running:
-        httpd.serve_forever()
-            
-    #except (KeyboardInterrupt, select.error):
-    #    keep_running = False
-
-    log.warning("Shutting down.")
-
+    
+    signal.signal(signal.SIGTERM, make_shutdown(httpd))
+    signal.signal(signal.SIGHUP, rebuild_cache)
+        
+    try:
+        try:
+            httpd.serve_forever()           
+        except select.error:
+            pass
+    except KeyboardInterrupt:
+        httpd.force_stop()
+    log.warn("Shutting down.")
     zeroconf.close()
 
 def main():
@@ -110,9 +126,6 @@ def main():
         usage()
         sys.exit(2)
 
-    signal.signal(signal.SIGHUP, rebuild_cache)
-    #signal.signal(signal.SIGTERM, shutdown)
-    #signal.signal(signal.SIGINT, shutdown)
     if uid == 0 or gid == 0:
         sys.stderr.write("spydaap must not run as root\n")
         sys.exit(2)
@@ -120,7 +133,9 @@ def main():
     os.setegid(gid)
     os.seteuid(uid)
 
-    if daemonize:
+    if not(daemonize):
+        really_main()
+    else:
         #redirect outputs to a logfile
         sys.stdout = sys.stderr = Log(open(logfile, 'a+'))
         try:
@@ -129,7 +144,7 @@ def main():
                 # exit first parent
                 sys.exit(0)
         except OSError, e:
-            print >>sys.stderr, "fork #1 failed: %d (%s)" % (e.errno, e.strerror)
+            sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
 
         # decouple from parent environment
@@ -148,9 +163,7 @@ def main():
         except OSError, e:
             print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)
             sys.exit(1)
-        mainloop()
-    else:
-        mainloop()
+        really_main()
 
 if __name__ == "__main__":
     main()
