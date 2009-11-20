@@ -30,6 +30,10 @@ class ContentRangeFile(object):
         self.chunk = chunk
         self.parent.seek(self.start)
         self.read = start
+        self.length = self.end - self.start
+
+    def __len__(self):
+        return self.length
 
     def next(self):
         to_read = self.chunk

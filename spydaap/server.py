@@ -35,30 +35,23 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
             if kwargs.has_key('extra_headers'):
                 for k, v in kwargs['extra_headers'].iteritems():
                     self.send_header(k, v)
-            if (hasattr(data, 'next')):
-                try:
+            try:
+                if type(data) == file:
                     self.send_header("Content-Length", str(os.stat(data.name).st_size))
-                except:
-                    traceback.print_exc(file=sys.stdout)
-                self.end_headers()
-                for d in data:
-                    try:
+                else:
+                    self.send_header("Content-Length", len(data))                   
+            except:
+                traceback.print_exc(file=sys.stdout)
+            self.end_headers()
+            try:
+                if (hasattr(data, 'next')):
+                    for d in data:
                         self.wfile.write(d)
-                    except socket.error, ex:
-                        if ex.errno in [errno.ECONNRESET]: return
-                        else: raise
-            else:
-                try:
-                    self.send_header("Content-Length", str(len(data)))
-                except: 
-                    traceback.print_exc(file=sys.stdout)
-                    log.warning('No content length.')
-                self.end_headers()
-                try:
+                else:
                     self.wfile.write(data)
-                except socket.error, ex:
-                    if ex.errno in [errno.ECONNRESET]: return
-                    else: raise
+            except socket.error, ex:
+                if ex.errno in [errno.ECONNRESET]: return
+                else: raise
 
         #itunes sends request for:
         #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
@@ -95,8 +88,8 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
             elif re.match('^/update$', parsed_path):
                 self.do_GET_update()
             else:
-                self.send_response(404)
-                self.end_headers()
+                self.send_error(404)
+            return
 
         def do_GET_login(self):
             mlog = do('dmap.loginresponse',
