@@ -188,6 +188,7 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
 
         def do_GET_item(self, database, item, format):
             fn = md_cache.get_item_by_id(item).get_original_filename()
+            sys.stderr.write("%s\n"%(self.headers))
             if (self.headers.has_key('Range')):
                 rs = self.headers['Range']
                 m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
@@ -202,7 +203,9 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
                 f = open(fn)
                 extra_headers={}
                 status=200
-            self.h(f, type='audio/*', status=status, extra_headers=extra_headers)
+            # this is ugly, very wrong.
+            type = "audio/%s"%(os.path.splitext(fn)[1])
+            self.h(f, type=type, status=status, extra_headers=extra_headers)
 
         def do_GET_container_list(self, database):
             container_do = []
