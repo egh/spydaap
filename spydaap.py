@@ -85,14 +85,14 @@ def really_main():
     
     signal.signal(signal.SIGTERM, make_shutdown(httpd))
     signal.signal(signal.SIGHUP, rebuild_cache)
-        
-    try:
+
+    while httpd.keep_running:
         try:
-            httpd.serve_forever()           
+            httpd.serve_forever()
         except select.error:
             pass
-    except KeyboardInterrupt:
-        httpd.force_stop()
+        except KeyboardInterrupt:
+            httpd.force_stop()
     log.warn("Shutting down.")
     zeroconf.unpublish()
 
