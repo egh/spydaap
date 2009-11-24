@@ -23,14 +23,18 @@ class Zeroconf(object):
             import pybonjour
             #records as in mt-daapd
             txtRecord=pybonjour.TXTRecord()
-            txtRecord['txtvers'] = '1'
-            txtRecord['iTSh Version'] = '131073'
-            txtRecord['Machine Name'] = self.name
-            txtRecord['Password'] = 'false'
-            #txtRecord['Database ID'] = ''
-            #txtRecord['Version'] = ''
-            #txtRecord['Machine ID'] = ''
-            #txtRecord['ffid'] = ''
+            txtRecord['txtvers']            = '1'
+            txtRecord['iTSh Version']       = '131073' #'196609'
+            txtRecord['Machine Name']       = self.name
+            txtRecord['Password']           = '0' # 'False' ?
+            #txtRecord['Database ID']        = '' # 16 hex digits
+            #txtRecord['Version']            = '196616'
+            #txtRecord['iTSh Version']       =
+            #txtRecord['Machine ID']         = '' # 12 hex digits
+            #txtRecord['Media Kinds Shared'] = '0'
+            #txtRecord['OSsi']               = '0x1F6' #?
+            #txtRecord['MID']                = '0x3AA6175DD7155BA7', = database id - 2 ?
+            #txtRecord['dmv']                = '131077'
 
             def register_callback(sdRef, flags, errorCode, name, regtype, domain):
                 pass
