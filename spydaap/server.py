@@ -41,17 +41,22 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
                 else:
                     self.send_header("Content-Length", len(data))                   
             except:
-                traceback.print_exc(file=sys.stdout)
+                pass
             self.end_headers()
-            try:
-                if (hasattr(data, 'next')):
-                    for d in data:
-                        self.wfile.write(d)
-                else:
-                    self.wfile.write(data)
-            except socket.error, ex:
-                if ex.errno in [errno.ECONNRESET]: return
-                else: raise
+            if hasattr(self, 'isHEAD') and self.isHEAD:
+                pass
+            else:
+                try:
+                    if (hasattr(data, 'next')):
+                        for d in data:
+                            self.wfile.write(d)
+                    else:
+                        self.wfile.write(data)
+                except socket.error, ex:
+                    if ex.errno in [errno.ECONNRESET]: pass
+                    else: raise
+            if (hasattr(data, 'close')):
+                data.close()
 
         #itunes sends request for:
         #GET daap://192.168.1.4:3689/databases/1/items/626.mp3?seesion-id=1
@@ -90,6 +95,10 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
             else:
                 self.send_error(404)
             return
+
+        def do_HEAD(self):
+            self.isHEAD = True
+            self.do_GET()
 
         def do_GET_login(self):
             mlog = do('dmap.loginresponse',
@@ -188,7 +197,6 @@ def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
 
         def do_GET_item(self, database, item, format):
             fn = md_cache.get_item_by_id(item).get_original_filename()
-            sys.stderr.write("%s\n"%(self.headers))
             if (self.headers.has_key('Range')):
                 rs = self.headers['Range']
                 m = re.compile('bytes=([0-9]+)-([0-9]+)?').match(rs)
