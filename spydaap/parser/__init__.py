@@ -21,8 +21,8 @@ class Parser:
         for k in md.tags.keys():
             if map.has_key(k):
                 try:
-                    tag = [ str(t) for t in md.tags[k]]
-                    tag = [ t for t in tag if t != ""]
+                    tag = [ str(t) for t in md.tags[k] ]
+                    tag = [ t for t in tag if t != "" ]
                     daap.append(do(map[k], "/".join(tag)))
                 except: pass
 
@@ -30,7 +30,10 @@ class Parser:
         for k in md.tags.keys():
             if map.has_key(k):
                 try:
-                    daap.append(do(map[k], int(str(md.tags[k]))))
+                    val = md.tags[k]
+                    if type(val) == list:
+                        val = val[0]
+                    daap.append(do(map[k], int(str(val))))
                 except: pass
 
     def add_file_info(self, filename, daap):

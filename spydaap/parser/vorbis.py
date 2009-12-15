@@ -45,13 +45,13 @@ class VorbisParser(spydaap.parser.Parser):
         }
 
     vorbis_int_map = {
-        'bpm': 'daap.songbeatsperminute',
-        'date': 'daap.songyear',
-        'year': 'daap.songyear',
-        'tracknumber': 'daap.songtracknumber',
-        'tracktotal': 'daap.songtrackcount',
-        'compilation': 'daap.songcompilation',
-        'discnumber': 'daap.songdiscnumber'
+        'bpm'         : 'daap.songbeatsperminute',
+        'date'        : 'daap.songyear',
+        'year'        : 'daap.songyear',
+        'tracknumber' : 'daap.songtracknumber',
+        'tracktotal'  : 'daap.songtrackcount',
+        'compilation' : 'daap.songcompilation',
+        'discnumber'  : 'daap.songdiscnumber'
         }
         
     file_re = re.compile(".*\\.([fF][lL][aA][cC]|[oO][gG]{2})$")
