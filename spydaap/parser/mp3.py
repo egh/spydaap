@@ -31,6 +31,7 @@ class Mp3Parser(spydaap.parser.Parser):
     mp3_int_map = {
         'TBPM': 'daap.songbeatsperminute',
         'TDRC': 'daap.songyear',
+        'TCMP': 'daap.songcompilation',
         #'TLEN': 'daap.songtime',
         }
 #do('daap.songdiscnumber', 1),

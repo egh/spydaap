@@ -16,13 +16,32 @@
 import mutagen, re, spydaap, re, os, sys
 from spydaap.daap import do
 
+# * TODO Implement song.songtrackcount, song.disccount
+#daap.songbeatsperminute
+#daap.songcomment
+#daap.songdateadded
+#daap.songdatemodified,
+#daap.songdisabled,
+#daap.songeqpreset
+#daap.songformat
+#daap.songdescription
+#daap.songrelativevolume,
+#daap.songsize,
+#daap.songstarttime,
+#daap.songstoptime,
+#daap.songtime,
+#daap.songuserrating,
+#daap.songdatakind,
+#daap.songdataurl
+
 class VorbisParser(spydaap.parser.Parser):
     vorbis_string_map = {
-        'title': 'dmap.itemname',
-        'artist': 'daap.songartist',
-        'composer': 'daap.songcomposer',
-        'genre': 'daap.songgenre',
-        'album': 'daap.songalbum'
+        'grouping' : 'daap.songgrouping',
+        'title'    : 'dmap.itemname',
+        'artist'   : 'daap.songartist',
+        'composer' : 'daap.songcomposer',
+        'genre'    : 'daap.songgenre',
+        'album'    : 'daap.songalbum',
         }
 
     vorbis_int_map = {
@@ -31,6 +50,7 @@ class VorbisParser(spydaap.parser.Parser):
         'year': 'daap.songyear',
         'tracknumber': 'daap.songtracknumber',
         'tracktotal': 'daap.songtrackcount',
+        'compilation': 'daap.songcompilation',
         'discnumber': 'daap.songdiscnumber'
         }
         
