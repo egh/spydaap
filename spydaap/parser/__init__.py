@@ -13,28 +13,25 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import os
+import os, re
 from spydaap.daap import do
 
 class Parser:
     def handle_string_tags(self, map, md, daap):
         for k in md.tags.keys():
             if map.has_key(k):
-                try:
-                    tag = [ str(t) for t in md.tags[k] ]
-                    tag = [ t for t in tag if t != "" ]
-                    daap.append(do(map[k], "/".join(tag)))
-                except: pass
+                tag = [ unicode(t) for t in md.tags[k] ]
+                tag = [ t for t in tag if t != "" ]
+                daap.append(do(map[k], "/".join(tag)))
 
     def handle_int_tags(self, map, md, daap):
         for k in md.tags.keys():
             if map.has_key(k):
-                try:
-                    val = md.tags[k]
-                    if type(val) == list:
-                        val = val[0]
-                    daap.append(do(map[k], int(str(val))))
-                except: pass
+                val = md.tags[k]
+                if type(val) == list:
+                    val = val[0]
+                intval = self.my_int(unicode(val))
+                if intval: daap.append(do(map[k], intval))
 
     def add_file_info(self, filename, daap):
         statinfo = os.stat(filename)
@@ -47,3 +44,11 @@ class Parser:
             if d.code == 'minm': return d.value
         daap.extend([do('minm', name)])
         return name
+
+    def clean_int_string(self, s):
+        return re.sub(u'[^0-9]', '', unicode(s))
+    
+    def my_int(self, s):
+        try:
+            return int(self.clean_int_string(s))
+        except: return None
