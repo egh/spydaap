@@ -170,12 +170,14 @@ class DAAPObject(object):
                 raise DAAPError('DAAPObject: encode: unknown code %s' % self.code)
                 return
             value = self.value
+            if type(value) == float:
+                value = int(value)
             if type(value) == unicode:
                 value = value.encode('utf-8')
             # calculate the length of what we're packing
             length  = struct.calcsize('!%s' % packing)
             # pack: 4 characters for the code, 4 bytes for the length, and 'length' bytes for the value
-            data = struct.pack('!4sI%s' % packing, self.code, length, value)
+            data = struct.pack('!4sI%s' % (packing), self.code, length, value)
             return data
 
     def processData(self, str):
