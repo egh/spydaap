@@ -22,9 +22,9 @@ class Mp3Parser(spydaap.parser.Parser):
         'TIT1': 'daap.songgrouping',
         'TIT2': 'dmap.itemname',
         'TPE1': 'daap.songartist',
+        'TPE3': 'daap.songalbumartist',
         'TCOM': 'daap.songcomposer',
         'TCON': 'daap.songgenre',
-        'TPE1': 'daap.songartist',
         'TALB': 'daap.songalbum',
         }
 
