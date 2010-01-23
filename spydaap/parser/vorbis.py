@@ -42,6 +42,7 @@ class VorbisParser(spydaap.parser.Parser):
         'composer' : 'daap.songcomposer',
         'genre'    : 'daap.songgenre',
         'album'    : 'daap.songalbum',
+        'albumartist': 'daap.songalbumartist',
         }
 
     vorbis_int_map = {
