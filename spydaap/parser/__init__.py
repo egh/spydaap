@@ -18,11 +18,16 @@ from spydaap.daap import do
 
 class Parser:
     def handle_string_tags(self, map, md, daap):
+        h = {}
         for k in md.tags.keys():
             if map.has_key(k):
                 tag = [ unicode(t) for t in md.tags[k] ]
                 tag = [ t for t in tag if t != "" ]
-                daap.append(do(map[k], "/".join(tag)))
+                if not(h.has_key(map[k])): h[map[k]] = []
+                h[map[k]] = h[map[k]] + tag
+        for k in h.keys():
+            h[k].sort()
+            daap.append(do(k, "/".join(h[k])))
 
     def handle_int_tags(self, map, md, daap):
         for k in md.tags.keys():
