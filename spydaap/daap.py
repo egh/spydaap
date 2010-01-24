@@ -121,7 +121,7 @@ class DAAPObject(object):
             # our object is a container,
             # this means we're going to have to
             # check contains[]
-            value   = ''
+            value = ''
             for item in self.contains:
                 # get the data stream from each of the sub elements
                 if type(item) == str:
@@ -139,16 +139,19 @@ class DAAPObject(object):
             # to calculate the length and such
             # we want to encode the contents of
             # value for our value
+            value = self.value
+            if type(value) == float:
+                value = int(value)
             if self.type == 'v':
-                value = self.value.split('.')
-                self.value = struct.pack('!HH', int(value[0]), int(value[1]))
+                value = value.split('.')
+                value = struct.pack('!HH', int(value[0]), int(value[1]))
                 packing = "4s"
             elif self.type == 'l':
                 packing = 'q'
             elif self.type == 'ul':
                 packing = 'Q'
             elif self.type == 'i':
-                if (type(self.value) == str and len(self.value) <= 4):
+                if (type(value) == str and len(value) <= 4):
                     packing = '4s'
                 else:
                     packing = 'i'
@@ -165,15 +168,12 @@ class DAAPObject(object):
             elif self.type == 't':
                 packing = 'I'
             elif self.type == 's':
-                packing = '%ss' % len(self.value)
+                if type(value) == unicode:
+                    value = value.encode('utf-8')
+                packing = '%ss' % len(value)
             else:
                 raise DAAPError('DAAPObject: encode: unknown code %s' % self.code)
                 return
-            value = self.value
-            if type(value) == float:
-                value = int(value)
-            if type(value) == unicode:
-                value = value.encode('utf-8')
             # calculate the length of what we're packing
             length  = struct.calcsize('!%s' % packing)
             # pack: 4 characters for the code, 4 bytes for the length, and 'length' bytes for the value
