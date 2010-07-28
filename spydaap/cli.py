@@ -14,7 +14,9 @@
 #You should have received a copy of the GNU General Public License
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-import BaseHTTPServer, SocketServer, getopt, grp, httplib, logging, os, pwd, select, signal, spydaap, sys
+import optparse
+
+import BaseHTTPServer, SocketServer, grp, httplib, logging, os, pwd, select, signal, spydaap, sys
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache, spydaap.server, spydaap.zeroconf
 from spydaap.daap import do
 import config
@@ -59,15 +61,6 @@ def rebuild_cache(signum=None, frame=None):
     container_cache.build(md_cache)
     cache.clean()
 
-def usage():
-    sys.stderr.write("Usage: %s [OPTION]\n"%(sys.argv[0]))
-    sys.stderr.write("  -f, --foreground        run in foreground, rather than daemonizing\n")
-    sys.stderr.write("  -g, --group=groupname   specify group to run as\n")
-    sys.stderr.write("  -h, --help              print this help\n")
-    sys.stderr.write("  -l, --logfile=file      use .log file (default is ./spydaap.log\n")
-    sys.stderr.write("  -p, --pidfile=file      use .pid file (default is ./spydaap.pid\n")
-    sys.stderr.write("  -u, --user=username     specify username to run as\n")
-
 def make_shutdown(httpd):
     def _shutdown(signum, frame): 
         httpd.force_stop() 
@@ -100,44 +93,49 @@ def main():
     daemonize = True
     logfile = os.path.abspath("spydaap.log")
     pidfile = os.path.abspath("spydaap.pid")
-    uid = os.getuid()
-    gid = os.getgid()
-    try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "fg:hl:p:u:", ["foreground", "group=", "help", "logfile=", "pidfile=", "user="])
-        for o, a in opts:
-            if o in ("-h", "--help"):
-                usage()
-                sys.exit()
-            elif o in ("-g", "--group"):
-                gid = grp.getgrnam(a)[2]
-            elif o in ("-f", "--foreground"):
-                daemonize = False
-            elif o in ("-l", "--logfile"):
-                logfile = a
-            elif o in ("-p", "--pidfile"):
-                pidfile = a
-            elif o in ("-u", "--user"):
-                uid = pwd.getpwnam(a)[2]
-            else:
-                assert False, "unhandled option"
-    except getopt.GetoptError, err:
-        # print help information and exit:
-        sys.stderr.write(str(err))
-        usage()
-        sys.exit(2)
 
-    if uid == 0 or gid == 0:
+    def getpwname(o, s, value, parser):
+        parser.values.user = pwd.getpwnam(value)[2]
+
+    def getgrname(o, s, value, parser):
+        parser.values.group = grp.getgrnam(value)[2]
+
+    parser = optparse.OptionParser()
+
+    parser.add_option("-f", "--foregroud", action="store_false",
+                      dest="daemonize", default=True,
+                      help="run in foreground, rather than daemonizing")
+
+    parser.add_option("-g", "--group", dest="group", action="callback",
+                      help="specify group to run as", type="str",
+                      callback=getgrname, default=os.getgid())
+
+    parser.add_option("-u", "--user", dest="user", action="callback",
+                      help="specify username to run as", type="string",
+                      callback=getpwname, default=os.getuid())
+
+    parser.add_option("-l", "--logfile", dest="logfile",
+                      default="./spydaap.log",
+                      help="use .log file (default is ./spydaap.log)")
+
+    parser.add_option("-p", "--pidfile", dest="pidfile",
+                      default="./spydaap.pid",
+                      help="use .pid file (default is ./spydaap.pid)")
+
+    opts, args = parser.parse_args()
+
+    if opts.user == 0 or opts.group == 0:
         sys.stderr.write("spydaap must not run as root\n")
         sys.exit(2)
     #ensure the that the daemon runs a normal user
-    os.setegid(gid)
-    os.seteuid(uid)
+    os.setegid(opts.group)
+    os.seteuid(opts.user)
 
-    if not(daemonize):
+    if not(opts.daemonize):
         really_main()
     else:
         #redirect outputs to a logfile
-        sys.stdout = sys.stderr = Log(open(logfile, 'a+'))
+        sys.stdout = sys.stderr = Log(open(opts.logfile, 'a+'))
         try:
             pid = os.fork()
             if pid > 0:
@@ -158,7 +156,7 @@ def main():
             if pid > 0:
                 # exit from second parent, print eventual PID before
                 #print "Daemon PID %d" % pid
-                open(pidfile,'w').write("%d"%pid)
+                open(opts.pidfile,'w').write("%d"%pid)
                 sys.exit(0)
         except OSError, e:
             print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)
