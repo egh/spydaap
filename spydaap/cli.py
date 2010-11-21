@@ -19,10 +19,9 @@ import optparse
 import BaseHTTPServer, SocketServer, grp, httplib, logging, os, pwd, select, signal, spydaap, sys
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache, spydaap.server, spydaap.zeroconf
 from spydaap.daap import do
-import config
 
-logging.basicConfig()
-log = logging.getLogger('spydaap')
+config_file = os.path.join(spydaap.spydaap_dir, "config.py")
+if os.path.isfile(config_file): execfile(config_file)
 
 cache = spydaap.cache.Cache(spydaap.cache_dir)
 md_cache = spydaap.metadata.MetadataCache(os.path.join(spydaap.cache_dir, "media"), spydaap.parsers)
@@ -72,7 +71,6 @@ def really_main():
                                          spydaap.port,  
                                          stype="_daap._tcp")
     zeroconf.publish()
-    log.warn("Listening.")
     httpd = MyThreadedHTTPServer(('0.0.0.0', spydaap.port), 
                                  spydaap.server.makeDAAPHandlerClass(spydaap.server_name, cache, md_cache, container_cache))
     
@@ -86,13 +84,10 @@ def really_main():
             pass
         except KeyboardInterrupt:
             httpd.force_stop()
-    log.warn("Shutting down.")
     zeroconf.unpublish()
 
 def main():
     daemonize = True
-    logfile = os.path.abspath("spydaap.log")
-    pidfile = os.path.abspath("spydaap.pid")
 
     def getpwname(o, s, value, parser):
         parser.values.user = pwd.getpwnam(value)[2]
@@ -115,11 +110,11 @@ def main():
                       callback=getpwname, default=os.getuid())
 
     parser.add_option("-l", "--logfile", dest="logfile",
-                      default="./spydaap.log",
+                      default=os.path.join(spydaap.spydaap_dir, "spydaap.log"),
                       help="use .log file (default is ./spydaap.log)")
 
     parser.add_option("-p", "--pidfile", dest="pidfile",
-                      default="./spydaap.pid",
+                      default=os.path.join(spydaap.spydaap_dir, "spydaap.pid"),
                       help="use .pid file (default is ./spydaap.pid)")
 
     opts, args = parser.parse_args()

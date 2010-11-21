@@ -14,12 +14,19 @@
 #along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
 import os, playlists
+import spydaap.parser.mp3, spydaap.parser.ogg, spydaap.parser.flac
+
+spydaap_dir = os.path.expanduser("~/.spydaap")
+if not(os.path.isdir(spydaap_dir)): os.mkdir(spydaap_dir)
 
 server_name = "spydaap"
 port = 3689
-media_path = os.path.abspath("media")
-cache_dir = os.path.abspath("cache")
+media_path = os.path.expanduser("~/Music/")
+cache_dir = os.path.join(spydaap_dir, "cache")
 container_list = [playlists.Library()]
+parsers = [spydaap.parser.mp3.Mp3Parser(),
+           spydaap.parser.flac.FlacParser(), 
+           spydaap.parser.ogg.OggParser()]
 
 class ContentRangeFile(object):
     def __init__(self, name, parent, start, end=None, chunk=1024):
