@@ -82,7 +82,6 @@ class Zeroconf(object):
             import pybonjour
             self.helper = Zeroconf.Pybonjour(*args, **kwargs)
         except:
-            traceback.print_exc(file=sys.stdout)
             try:
                 import avahi, dbus
                 self.helper = Zeroconf.Avahi(*args, **kwargs)
