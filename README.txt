@@ -42,7 +42,7 @@ Running
   $ spydaap
 
 ``~/Music/`` is the default directory where spydaap looks for media
-files. It can be change by editing ``~/spydaap/config.py`` (see
+files. It can be changed by editing ``~/.spydaap/config.py`` (see
 ``config.py.example``)
 
 Customizing
