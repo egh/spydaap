@@ -97,7 +97,7 @@ def main():
 
     parser = optparse.OptionParser()
 
-    parser.add_option("-f", "--foregroud", action="store_false",
+    parser.add_option("-f", "--foreground", action="store_false",
                       dest="daemonize", default=True,
                       help="run in foreground, rather than daemonizing")
 
