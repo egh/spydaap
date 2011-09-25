@@ -10,6 +10,24 @@ Requirements
 3. pybonjour <http://o2s.csail.mit.edu/o2s-wiki/pybonjour> or
    python-avahi
 
+Running without installing
+--------------------------
+
+From outside this directory, simply run::
+
+    $ python <name of directory containing __main__.py>
+
+It is also possible to create a zipped version of this directory (a so-called
+'python egg' -- often the extension of this zipfile is chosen to be 'egg').  In
+this case, run::
+
+    $ python <name of zipped file>
+
+From inside this directory, run::
+
+    $ python run_spydaap
+
+
 Installing
 ----------
 
