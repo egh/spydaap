@@ -159,6 +159,8 @@ class DAAPObject(object):
                 packing = 'I'
             elif self.type == 'h':
                 packing = 'h'
+                if (value > 32767):    value =  32767
+                elif (value < -32768): value = -32768
             elif self.type == 'uh':
                 packing = 'H'
             elif self.type == 'b':
