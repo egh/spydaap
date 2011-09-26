@@ -116,10 +116,13 @@ def main():
                       dest="daemonize", default=False,
                       help="run in the background as a daemon process")
     
-    # TODO: implement...
     parser.add_option("-k", "--kill", action="store_true",
                       dest="kill_daemon", default=False,
                       help="kill a running daemon process")
+    
+    parser.add_option("-n", "--servername", dest="servername",
+                      default=None,
+                      help="set the server-name (must be < 64 chars); default is 'spydaap'")
     
     parser.add_option("-q", "--quiet", action="store_true",
                       dest="quiet", default=False,
@@ -159,10 +162,13 @@ def main():
             print "Unable to kill daemon -- not running, or missing pid file?"
         
         sys.exit(0)
+        
+    if opts.servername is not None:
+        spydaap.server_name = opts.servername
     
     if not(opts.daemonize):
         if not opts.quiet:
-            print "spydaap server started.  Press Ctrl-C to exit."
+            print "spydaap server started (use --help for more options).  Press Ctrl-C to exit."
         #redirect outputs to a logfile
         sys.stdout = sys.stderr = Log(open(opts.logfile, 'a+'), opts.quiet)
         really_main(opts)
