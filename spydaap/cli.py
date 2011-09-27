@@ -124,6 +124,10 @@ def main():
                       default=None,
                       help="set the server-name (must be < 64 chars); default is 'spydaap'")
     
+    parser.add_option("-f", "--folder", dest="folderpath",
+                      default=None,
+                      help="set the path to the media folder (default is ~/Music)")
+    
     parser.add_option("-q", "--quiet", action="store_true",
                       dest="quiet", default=False,
                       help="suppress logging to stdout")
@@ -162,9 +166,16 @@ def main():
             print "Unable to kill daemon -- not running, or missing pid file?"
         
         sys.exit(0)
-        
+    
     if opts.servername is not None:
         spydaap.server_name = opts.servername
+    
+    if len(spydaap.server_name) > 63:
+        # truncate to max valid length (63 characters)
+        spydaap.server_name = spydaap.server_name[:63]
+    
+    if opts.folderpath is not None:
+        spydaap.media_path = os.path.expanduser(opts.folderpath)
     
     if not(opts.daemonize):
         if not opts.quiet:
