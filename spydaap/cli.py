@@ -16,9 +16,11 @@
 
 import optparse
 
-import BaseHTTPServer, SocketServer, grp, httplib, logging, os, pwd, select, signal, spydaap, sys
+import BaseHTTPServer, SocketServer, grp, os, pwd, select, signal, spydaap, sys
+import socket
+# import httplib, logging
 import spydaap.daap, spydaap.metadata, spydaap.containers, spydaap.cache, spydaap.server, spydaap.zeroconf
-from spydaap.daap import do
+#from spydaap.daap import do
 
 config_file = os.path.join(spydaap.spydaap_dir, "config.py")
 if os.path.isfile(config_file): execfile(config_file)
@@ -28,15 +30,20 @@ md_cache = spydaap.metadata.MetadataCache(os.path.join(spydaap.cache_dir, "media
 container_cache = spydaap.containers.ContainerCache(os.path.join(spydaap.cache_dir, "containers"), spydaap.container_list)
 keep_running = True
 
-class Log:
+class Log(object):
     """file like for writes with auto flush after each write
     to ensure that everything is logged, even during an
     unexpected exit."""
-    def __init__(self, f):
+    def __init__(self, f, quiet):
         self.f = f
+        self.quiet = quiet
+        self.stdout = sys.__stdout__
     def write(self, s):
         self.f.write(s)
         self.f.flush()
+        if not self.quiet:
+            self.stdout.write(s)
+            self.stdout.flush()
 
 class MyThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     """Handle requests in a separate thread."""
@@ -65,14 +72,24 @@ def make_shutdown(httpd):
         httpd.force_stop() 
     return _shutdown
 
-def really_main():
+# invalid default pid ; prevents killing something unintended
+def really_main(opts, parent_pid=99999999999999):
     rebuild_cache()
     zeroconf = spydaap.zeroconf.Zeroconf(spydaap.server_name,
                                          spydaap.port,  
                                          stype="_daap._tcp")
     zeroconf.publish()
-    httpd = MyThreadedHTTPServer(('0.0.0.0', spydaap.port), 
-                                 spydaap.server.makeDAAPHandlerClass(spydaap.server_name, cache, md_cache, container_cache))
+    try:
+        httpd = MyThreadedHTTPServer(('0.0.0.0', spydaap.port), 
+                                     spydaap.server.makeDAAPHandlerClass(spydaap.server_name, cache, md_cache, container_cache))
+        # write pid to pidfile
+        open(opts.pidfile,'w').write("%d" % parent_pid)
+    except socket.error:
+        if not opts.daemonize:
+            print "Another DAAP server is already running. Exiting."
+            
+        sys.exit(0) # silently exit; another instance is already running
+        
     
     signal.signal(signal.SIGTERM, make_shutdown(httpd))
     signal.signal(signal.SIGHUP, rebuild_cache)
@@ -87,8 +104,6 @@ def really_main():
     zeroconf.unpublish()
 
 def main():
-    daemonize = True
-
     def getpwname(o, s, value, parser):
         parser.values.user = pwd.getpwnam(value)[2]
 
@@ -97,9 +112,25 @@ def main():
 
     parser = optparse.OptionParser()
 
-    parser.add_option("-f", "--foreground", action="store_false",
-                      dest="daemonize", default=True,
-                      help="run in foreground, rather than daemonizing")
+    parser.add_option("-d", "--daemon", action="store_true",
+                      dest="daemonize", default=False,
+                      help="run in the background as a daemon process")
+    
+    parser.add_option("-k", "--kill", action="store_true",
+                      dest="kill_daemon", default=False,
+                      help="kill a running daemon process")
+    
+    parser.add_option("-n", "--servername", dest="servername",
+                      default=None,
+                      help="set the server-name (must be < 64 chars); default is 'spydaap'")
+    
+    parser.add_option("-f", "--folder", dest="folderpath",
+                      default=None,
+                      help="set the path to the media folder (default is ~/Music)")
+    
+    parser.add_option("-q", "--quiet", action="store_true",
+                      dest="quiet", default=False,
+                      help="suppress logging to stdout")
 
     parser.add_option("-g", "--group", dest="group", action="callback",
                       help="specify group to run as", type="str",
@@ -111,11 +142,11 @@ def main():
 
     parser.add_option("-l", "--logfile", dest="logfile",
                       default=os.path.join(spydaap.spydaap_dir, "spydaap.log"),
-                      help="use .log file (default is ./spydaap.log)")
+                      help="use log file (default is ~/.spydaap/spydaap.log)")
 
     parser.add_option("-p", "--pidfile", dest="pidfile",
                       default=os.path.join(spydaap.spydaap_dir, "spydaap.pid"),
-                      help="use .pid file (default is ./spydaap.pid)")
+                      help="use pid file (default is ~/.spydaap/spydaap.pid)")
 
     opts, args = parser.parse_args()
 
@@ -125,12 +156,38 @@ def main():
     #ensure the that the daemon runs a normal user
     os.setegid(opts.group)
     os.seteuid(opts.user)
-
+    
+    if opts.kill_daemon:
+        try:
+            pid = int(open(opts.pidfile,'r').read())
+            os.kill(pid, signal.SIGTERM)
+            print "Daemon killed."
+        except (OSError, IOError):
+            print "Unable to kill daemon -- not running, or missing pid file?"
+        
+        sys.exit(0)
+    
+    if opts.servername is not None:
+        spydaap.server_name = opts.servername
+    
+    if len(spydaap.server_name) > 63:
+        # truncate to max valid length (63 characters)
+        spydaap.server_name = spydaap.server_name[:63]
+    
+    if opts.folderpath is not None:
+        spydaap.media_path = os.path.expanduser(opts.folderpath)
+    
     if not(opts.daemonize):
-        really_main()
-    else:
+        if not opts.quiet:
+            print "spydaap server started (use --help for more options).  Press Ctrl-C to exit."
         #redirect outputs to a logfile
-        sys.stdout = sys.stderr = Log(open(opts.logfile, 'a+'))
+        sys.stdout = sys.stderr = Log(open(opts.logfile, 'a+'), opts.quiet)
+        really_main(opts)
+    else:
+        if not opts.quiet:
+            print "spydaap daemon started in background."
+        #redirect outputs to a logfile
+        sys.stdout = sys.stderr = Log(open(opts.logfile, 'a+'), True)
         try:
             pid = os.fork()
             if pid > 0:
@@ -148,15 +205,20 @@ def main():
         # do second fork
         try:
             pid = os.fork()
-            if pid > 0:
-                # exit from second parent, print eventual PID before
-                #print "Daemon PID %d" % pid
-                open(opts.pidfile,'w').write("%d"%pid)
+            # if in second parent, exit from it
+            if pid > 0: 
+                # store pid temporarily (don't overwrite real pidfile until we
+                # know server has successfully started)
+                open(opts.pidfile + '.tmp','w').write("%d" % pid)
+                parent_pid = pid
                 sys.exit(0)
         except OSError, e:
             print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)
             sys.exit(1)
-        really_main()
+        # load parent pid
+        parent_pid = int(open(opts.pidfile + '.tmp','r').read())
+        
+        really_main(opts, parent_pid)
 
 if __name__ == "__main__":
     main()
