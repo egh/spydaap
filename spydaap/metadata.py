@@ -46,10 +46,13 @@ class MetadataCache(spydaap.cache.OrderedCache):
                         (md.get_mtime() < os.stat(ffn).st_mtime)):
                     for p in self.parsers:
                         if p.understands(ffn):                  
-                            (m, name) = p.parse(ffn)
-                            if m != None:
-                                MetadataCacheItem.write_entry(self.dir,
-                                                              name, ffn, m)
+                            try:
+                                (m, name) = p.parse(ffn)
+                                if m != None:
+                                    MetadataCacheItem.write_entry(self.dir,
+                                                                  name, ffn, m)
+                            except:
+                                pass
         if not(link):
             for item in os.listdir(self.dir):
                 if (len(item) == 32) and not(marked.has_key(item)):
