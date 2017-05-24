@@ -35,7 +35,7 @@ dmapCodeTypes = {
     'aeSP': ('com.apple.itunes.smart-playlist', 'b'),
     'aeSV': ('com.apple.itunes.music-sharing-version', 'i'),
     'agrp': ('daap.songgrouping', 's'),
-    'aply': ('daap.databaseplaylists', 'c'), 
+    'aply': ('daap.databaseplaylists', 'c'),
     'aprm': ('daap.playlistrepeatmode', 'b'),
     'apro': ('daap.protocolversion', 'v'),
     'apsm': ('daap.playlistshufflemode', 'b'),
@@ -139,21 +139,21 @@ dmapCodeTypes = {
     'muty': ('dmap.updatetype', 'b'),
     'ppro': ('dpap.protocolversion', 'i'),
     'pret': ('dpap.unknown', 'c'),
-    }
+}
 
 dmapDataTypes = {
-    1:'b',  # byte
-    2:'ub', # unsigned byte
-    3:'h',  # short
-    4:'uh', # unsigned short
-    5:'i',  # integer
-    6:'ui', # unsigned integer
-    7:'l',  # long
-    8:'ul', # unsigned long
-    9:'s',  # string
-    10:'t', # timestamp
-    11:'v', # version
-    12:'c', # container
+    1: 'b',  # byte
+    2: 'ub',  # unsigned byte
+    3: 'h',  # short
+    4: 'uh',  # unsigned short
+    5: 'i',  # integer
+    6: 'ui',  # unsigned integer
+    7: 'l',  # long
+    8: 'ul',  # unsigned long
+    9: 's',  # string
+    10: 't',  # timestamp
+    11: 'v',  # version
+    12: 'c',  # container
 }
 
 dmapNames = {}
