@@ -15,7 +15,6 @@
 
 import mutagen.id3
 import mutagen.mp3
-import re
 import spydaap
 import re
 import os

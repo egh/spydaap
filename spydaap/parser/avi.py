@@ -15,7 +15,6 @@
 
 import re
 import spydaap
-import re
 import os
 import sys
 from spydaap.daap import do

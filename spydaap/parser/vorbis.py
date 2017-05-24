@@ -14,7 +14,6 @@
 # along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
 import mutagen
-import re
 import spydaap
 import re
 import os
