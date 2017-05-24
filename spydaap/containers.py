@@ -13,13 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
-try:
-    # Python >= 2.6
-    from hashlib import md5
-except ImportError:
-    # Python 2.5
-    from md5 import md5
-
+from hashlib import md5
 import os
 import struct
 import spydaap.cache

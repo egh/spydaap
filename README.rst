@@ -17,7 +17,7 @@ new versions of iTunes).
 Requirements
 ------------
 
-1. Python 2.4 or later
+1. Python 2.5 or later
 2. `mutagen <http://code.google.com/p/mutagen/>`_
 3. `pybonjour <http://code.google.com/p/pybonjour/>`_ or python-avahi
 
