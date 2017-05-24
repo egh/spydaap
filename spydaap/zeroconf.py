@@ -4,7 +4,9 @@ __all__ = ["Zeroconf"]
 
 import select
 import sys
-import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Zeroconf(object):
@@ -88,13 +90,14 @@ class Zeroconf(object):
         try:
             import pybonjour
             self.helper = Zeroconf.Pybonjour(*args, **kwargs)
-        except:
+        except ImportError:
+            logger.info('pybonjour not found, using avahi')
             try:
                 import avahi
                 import dbus
                 self.helper = Zeroconf.Avahi(*args, **kwargs)
-            except:
-                traceback.print_exc(file=sys.stdout)
+            except ImportError:
+                logger.warning('pybonjour nor avahi found, cannot announce presence')
                 self.helper = None
 
     def publish(self):
