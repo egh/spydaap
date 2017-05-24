@@ -98,9 +98,9 @@ class Zeroconf(object):
                 self.helper = None
 
     def publish(self):
-        if self.helper != None:
+        if self.helper is not None:
             self.helper.publish()
 
     def unpublish(self):
-        if self.helper != None:
+        if self.helper is not None:
             self.helper.unpublish()
