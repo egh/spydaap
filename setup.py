@@ -1,7 +1,7 @@
 from setuptools import setup
 import platform
 
-reqs=["mutagen>=1.2"]
+reqs = ["mutagen>=1.2"]
 # use avahi if available
 try:
     import avahi
