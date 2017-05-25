@@ -21,8 +21,6 @@ import re
 import urlparse
 import socket
 import spydaap
-import sys
-import traceback
 from spydaap.daap import do
 
 

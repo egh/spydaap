@@ -14,6 +14,7 @@
 # along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
 from hashlib import md5
+
 import os
 import struct
 import spydaap.cache

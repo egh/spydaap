@@ -9,9 +9,10 @@
 #
 # Stripped clean + a few bug fixes, Erik Hetzner
 
+import logging
 import struct
 import sys
-import logging
+
 from spydaap.daap_data import *
 
 __all__ = ['DAAPError', 'DAAPObject', 'do']

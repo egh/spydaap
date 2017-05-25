@@ -33,7 +33,6 @@ import spydaap.containers
 import spydaap.cache
 import spydaap.server
 import spydaap.zeroconf
-#from spydaap.daap import do
 
 config_file = os.path.join(spydaap.spydaap_dir, "config.py")
 if os.path.isfile(config_file):
