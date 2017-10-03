@@ -212,7 +212,6 @@ class DAAPObject(object):
             self.contains = []
             # the object is a container, we need to pass it
             # it's length amount of data for processessing
-            eof = 0
             while str.tell() < start_pos + self.length:
                 object = DAAPObject()
                 self.contains.append(object)
