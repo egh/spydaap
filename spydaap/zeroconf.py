@@ -78,7 +78,7 @@ class Zeroconf(object):
                 avahi.DBUS_INTERFACE_ENTRY_GROUP)
 
             if ipv4 and ipv6:
-                prot = avahi.PROTO_UNSPEC
+                proto = avahi.PROTO_UNSPEC
             elif ipv6:
                 proto = avahi.PROTO_INET6
             else:  # we don't let them both be false
