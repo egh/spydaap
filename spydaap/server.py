@@ -15,7 +15,6 @@
 
 import BaseHTTPServer
 import errno
-import logging
 import os
 import re
 import urlparse
@@ -26,7 +25,6 @@ from spydaap.daap import do
 
 def makeDAAPHandlerClass(server_name, cache, md_cache, container_cache):
     session_id = 1
-    log = logging.getLogger('spydaap.server')
 
     class DAAPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         daap_server_revision = 1
