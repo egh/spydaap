@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name="spydaap",
-    version="0.1dev",
+    version="0.1",
     author="Erik Hetzner",
     author_email="egh@e6h.org",
     description="A simple DAAP server",
@@ -31,7 +31,7 @@ Features:
  - Written in 100 percent Python and easily modifiable.
  - Caches almost everything for fast performance.
  - Embeddable.""",
-    url="http://launchpad.net/spydaap/",
+    url="https://github.com/egh/spydaap",
     install_requires=reqs,
     entry_points={
         'console_scripts': [
