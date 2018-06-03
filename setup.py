@@ -30,7 +30,12 @@ Features:
  - Supports "smart" playlists written in Python.
  - Written in 100 percent Python and easily modifiable.
  - Caches almost everything for fast performance.
- - Embeddable.""",
+ - Embeddable.
+
+Note: This pypi package is maintained by the Exaile project, but will be kept in
+sync with the upstream spydaap project. 
+ 
+""",
     url="https://github.com/egh/spydaap",
     install_requires=reqs,
     entry_points={

@@ -43,6 +43,13 @@ From inside this directory, run::
 Installing
 ----------
 
+Via pip
+~~~~~~~
+
+::
+  
+  $ pip install spydaap
+
 Ubuntu/Debian
 ~~~~~~~~~~~~~
 
