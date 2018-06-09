@@ -32,7 +32,7 @@ import spydaap.metadata
 import spydaap.containers
 import spydaap.cache
 import spydaap.server
-import spydaap.zeroconf
+import spydaap.zeroconfimpl
 
 config_file = os.path.join(spydaap.spydaap_dir, "config.py")
 if os.path.isfile(config_file):
@@ -96,9 +96,9 @@ def make_shutdown(httpd):
 
 def really_main(opts, parent_pid=99999999999999):
     rebuild_cache()
-    zeroconf = spydaap.zeroconf.Zeroconf(spydaap.server_name,
-                                         spydaap.port,
-                                         stype="_daap._tcp")
+    zeroconf = spydaap.zeroconfimpl.ZeroconfImpl(spydaap.server_name,
+                                                 spydaap.port,
+                                                 stype="_daap._tcp")
     zeroconf.publish()
     try:
         httpd = MyThreadedHTTPServer(('0.0.0.0', spydaap.port),
