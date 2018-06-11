@@ -2,7 +2,7 @@
  spydaap: a simple DAAP server for python
 ==========================================
 
-spydaap is a Digital Audio Access Protocol (DAAP) server -- DAAP is the 
+spydaap is a Digital Audio Access Protocol (DAAP) server -- DAAP is the
 protocol used by Apple's iTunes software.  Running spydaap on your machine
 allows any DAAP enabled music player to browse and play selections from your
 music collection (including music players running on the same machine as the
@@ -19,7 +19,9 @@ Requirements
 
 1. Python 2.5 or later
 2. `mutagen <http://code.google.com/p/mutagen/>`_
-3. `pybonjour <http://code.google.com/p/pybonjour/>`_ or python-avahi
+3. One of:
+  - python-avahi
+  - `zeroconf <https://github.com/jstasiak/python-zeroconf>`_
 
 
 Running without installing
