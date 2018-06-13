@@ -6,11 +6,15 @@ reqs = ["mutagen>=1.2"]
 try:
     import avahi
 except ImportError:
-    reqs.append("pybonjour>=1.1")
+    import sys
+    if sys.version_info[0] < 3:
+        reqs.append("zeroconf<0.20")
+    else:
+        reqs.append("zeroconf")
 
 setup(
     name="spydaap",
-    version="0.1",
+    version="0.2",
     author="Erik Hetzner",
     author_email="egh@e6h.org",
     description="A simple DAAP server",
@@ -21,7 +25,7 @@ setup(
 
 Spydaap is a media server supporting the DAAP protocol (aka iTunes
 sharing). It is written in Python, uses the mutagen media metadata
-library, and either the Avahi or pybonjour Zeroconf implementation.
+library, and either the Avahi or python-zeroconf implementation.
 
 Features:
 
@@ -33,7 +37,7 @@ Features:
  - Embeddable.
 
 Note: This pypi package is maintained by the Exaile project, but will be kept in
-sync with the upstream spydaap project. 
+sync with the upstream spydaap project.
  
 """,
     url="https://github.com/egh/spydaap",

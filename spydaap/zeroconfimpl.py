@@ -1,16 +1,16 @@
 # adopted from http://stackp.online.fr/?p=35
 
-__all__ = ["Zeroconf"]
+__all__ = ["ZeroconfImpl"]
 
-import select
+import socket
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class Zeroconf(object):
+class ZeroconfImpl(object):
     """A simple class to publish a network service with zeroconf using
-    avahi or pybonjour, preferring pybonjour.
+    avahi or python-zeroconf
     """
 
     class Helper(object):
@@ -23,42 +23,37 @@ class Zeroconf(object):
             self.host = kwargs.get('host', '')
             self.text = kwargs.get('text', '')
 
-    class Pybonjour(Helper):
-
+    class Zeroconf(Helper):
+        
         def publish(self):
-            import pybonjour
-            # records as in mt-daapd
-            txtRecord = pybonjour.TXTRecord()
-            txtRecord['txtvers'] = '1'
-            txtRecord['iTSh Version'] = '131073'  # '196609'
-            txtRecord['Machine Name'] = self.name
-            txtRecord['Password'] = '0'  # 'False' ?
-            # txtRecord['Database ID']        = '' # 16 hex digits
-            #txtRecord['Version']            = '196616'
-            # txtRecord['iTSh Version']       =
-            # txtRecord['Machine ID']         = '' # 12 hex digits
-            #txtRecord['Media Kinds Shared'] = '0'
-            # txtRecord['OSsi']               = '0x1F6' #?
-            # txtRecord['MID']                = '0x3AA6175DD7155BA7', = database id - 2 ?
-            #txtRecord['dmv']                = '131077'
-
-            def register_callback(sdRef, flags, errorCode, name, regtype, domain):
-                pass
-
-            self.sdRef = pybonjour.DNSServiceRegister(name=self.name,
-                                                      regtype="_daap._tcp",
-                                                      port=self.port,
-                                                      callBack=register_callback,
-                                                      txtRecord=txtRecord)
-
-            while True:
-                ready = select.select([self.sdRef], [], [])
-                if self.sdRef in ready[0]:
-                    pybonjour.DNSServiceProcessResult(self.sdRef)
-                    break
-
+            import zeroconf
+            
+            # zeroconf doesn't do this for us
+            # .. pick one at random? Ideally, zeroconf would publish all valid
+            #    addresses as the A record.. but doesn't seem to do so
+            addrs = zeroconf.get_all_addresses(socket.AF_INET)
+            address = None
+            if addrs:
+                for addr in addrs:
+                    if addr != '127.0.0.1':
+                        address = socket.inet_aton(addrs[0])
+            
+            type_ = self.stype + ".local."
+            self.info = zeroconf.ServiceInfo(
+                type_,
+                self.name + "." + type_,
+                address=address,
+                port=self.port,
+                properties=self.text,
+                server=self.host if self.host else None
+            )
+            
+            self.zc = zeroconf.Zeroconf()
+            self.zc.register_service(self.info)
+        
         def unpublish(self):
-            self.sdRef.close()
+            self.zc.unregister_service(self.info)
+            self.zc.close()
 
     class Avahi(Helper):
 
@@ -93,18 +88,29 @@ class Zeroconf(object):
             self.group.Reset()
 
     def __init__(self, *args, **kwargs):
+        zeroconf = None
+        avahi = None
+        
         try:
-            import pybonjour
-            self.helper = Zeroconf.Pybonjour(*args, **kwargs)
+            import zeroconf
         except ImportError:
-            logger.info('pybonjour not found, using avahi')
             try:
                 import avahi
                 import dbus
-                self.helper = Zeroconf.Avahi(*args, **kwargs)
             except ImportError:
-                logger.warning('pybonjour nor avahi found, cannot announce presence')
-                self.helper = None
+                pass
+        
+        if zeroconf:
+            logger.info("zeroconf implementation is zeroconf")
+            self.helper = ZeroconfImpl.Zeroconf(*args, **kwargs)
+            
+        elif avahi:
+            logger.info("zeroconf implementation is avahi")
+            self.helper = ZeroconfImpl.Avahi(*args, **kwargs)
+        
+        else:
+            logger.warning('zeroconf implementation not found, cannot announce presence')
+
 
     def publish(self, *args, **kwargs):
         if self.helper is not None:
