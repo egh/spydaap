@@ -110,6 +110,7 @@ class ZeroconfImpl(object):
         
         else:
             logger.warning('zeroconf implementation not found, cannot announce presence')
+            self.helper = None
 
 
     def publish(self, *args, **kwargs):
