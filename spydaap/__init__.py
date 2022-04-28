@@ -14,7 +14,7 @@
 # along with Spydaap. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import playlists
+import spydaap.playlists
 import spydaap.parser.mp3
 import spydaap.parser.ogg
 import spydaap.parser.flac
